@@ -455,12 +455,35 @@ function coinV(){
   <div class="card"><b>Payment ke baad</b><div class="mu" style="margin:4px 0 10px">Apne UPI app se 12 digit Transaction ID (UTR) daalo</div>
   <input class="ci" id="cu" inputmode="numeric" maxlength="12" placeholder="12 digit UTR number">
   <button class="btn w100" onclick="subUTR()">VERIFY KARO</button></div>`:"")
+  +accCard()
   +promoCard()
   +wdCard()
   +(P.length?`<h3>Payment History</h3><div class="card">`+P.map(p=>`<div class="li"><span>₹${p.amt} · <span class="mu">UTR ${esc(p.utr)}</span></span>${bg(p.s)}</div>`).join("")+`</div>`:"");
 }
 const gpr=()=>{try{return JSON.parse(localStorage.getItem("ffapr")||"{}")}catch(e){return{}}};
 async function ph(c){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("ffp:"+c));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function accCard(){
+  return `<div class="card"><b>🔐 Account Settings</b><div class="mu" style="margin:6px 0">Apna password ya mobile number badal sakte ho.</div>
+  <input class="ci" id="anp" type="password" placeholder="Naya password (min 6)" autocomplete="new-password">
+  <input class="ci" id="anp2" type="password" placeholder="Naya password dobara" autocomplete="new-password">
+  <button class="btn w100" onclick="changePass()">PASSWORD BADLO</button>
+  <input class="ci" id="anm" type="tel" inputmode="numeric" maxlength="10" placeholder="Naya mobile number (10 digit)" style="margin-top:10px">
+  <button class="btn w100" onclick="changeMobile()">MOBILE BADLO</button></div>`;
+}
+async function changePass(){
+  const p=$("anp").value,p2=$("anp2").value;
+  if(p.length<6||p!==p2){alert("Password kam se kam 6 akshar ka ho aur dono baar same ho");return}
+  const {error}=await sb.auth.updateUser({password:p});
+  if(error){alert(error.message);return}
+  alert("Password badal gaya");$("anp").value="";$("anp2").value="";
+}
+async function changeMobile(){
+  const m=$("anm").value.trim();
+  if(!/^[6-9]\d{9}$/.test(m)){alert("Sahi 10 digit mobile number daalo");return}
+  const {error}=await sb.from("profiles").update({mobile:m}).eq("id",ME);
+  if(error){alert(/duplicate/i.test(error.message)?"Ye mobile number pehle se use ho raha hai":error.message);return}
+  PROF.mobile=m;alert("Mobile number badal gaya");R();
+}
 function promoCard(){
   return `<div class="card"><b>🎁 Promo Code</b><div class="mu" style="margin:4px 0 10px">Promo code hamare <a href="${TG}" target="_blank" rel="noopener" style="color:var(--gd)">Telegram channel</a> par milta hai. Code daalo aur free coins pao.</div>
   <input class="ci" id="pc" placeholder="Promo code" autocapitalize="characters" autocomplete="off">

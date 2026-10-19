@@ -95,6 +95,7 @@ nav button.on{color:var(--rd)}
 .bd{display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
 .bd.p{background:#4a3b12;color:var(--gd)}.bd.o{background:#12402a;color:#3ddc84}.bd.x{background:#4a1a1a;color:#ff6b6b}
 
+.inst{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(90deg,#2a1b4d,#3b1d6e);border:1px solid #6a3fc4;border-radius:4px;padding:10px 12px;margin-bottom:10px;font-weight:700;font-size:14px}.inst .btn{padding:8px 14px;white-space:nowrap}
 .rl ol{margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.55;color:#cfd5e8}.rl li{margin-bottom:8px}.rl li:nth-child(2),.rl li:nth-child(3),.rl li:nth-child(4){color:#ffcf6b}
 /* ===== FF Esport look: night-lobby HUD, cut corners, ember + gold ===== */
 :root{--bg:#0a0d16;--card:#121828;--tx:#f4f6fb;--mu:#8e98b5;--rd:#e5471b;--rd2:#2a1812;--bd:#232c45;--gd:#ffb21a;--cy:#38d6ff;
@@ -155,6 +156,7 @@ nav button.on::before{content:"";position:absolute;top:0;left:22%;right:22%;heig
 button:focus-visible,a:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.st2{transition:none!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div class="top"><span style="display:flex;align-items:center;gap:9px"><img id="tl" alt="" style="width:30px;height:30px;border-radius:50%;display:block"><span id="ttl">FF Esport</span></span><span class="coin" id="coin" onclick="go('coin')" style="cursor:pointer">🪙 0</span></div>
@@ -182,14 +184,14 @@ const save=()=>{try{localStorage.setItem("ffa2",JSON.stringify(J))}catch(e){}};
 const $=i=>document.getElementById(i);
 const go=v=>{view=v;R();scrollTo(0,0)};
 const det=id=>{sel=id;go("det")};
-function join(id){
+async function join(id){
   const m=M.find(x=>x.id==id);
   if(!m||J[id])return;if(!ID){alert("Pehle Profile me apna Free Fire Character ID save karo.");go("pro");return}
   if(m.j>=m.x){alert("Ye match full ho chuka hai.");return}
   const f=m.fee||0;
   if(f>0&&bal()<f){alert("Coins kam hain. Is match ki entry "+f+" coins hai, tumhare wallet me "+bal()+" coins hain.");go("coin");return}
   if(!confirm("MATCH RULES\n\n"+RULES.map((r,i)=>(i+1)+". "+r).join("\n\n")+"\n\n"+(f>0?"Entry fee "+f+" coins tumhare wallet se kat jayegi.\n\n":"")+"Kya tum sab rules maante ho aur join karna chahte ho?"))return;
-  if(f>0)addBal(ME,-f);
+  if(f>0&&!(await spendCoins(f)))return;
   m.j++;(m.pl=m.pl||[]).push({u:ME,n:(gu()[ME]||{}).n||ME,ff:ID,t:Date.now()});saveM();
   J[id]=m.j;save();R();
 }
@@ -214,7 +216,13 @@ const BANNER="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgo
 const BN=["FREE FIRE<br>BATTLE ARENA","DAILY<br>BOOYAH CASH","JOIN FREE<br>WIN REWARDS"];let bi=0;
 function ban(){const e=$("bn");if(!e)return;e.innerHTML=BN[bi%3];$("ds").innerHTML=BN.map((_,i)=>`<i class="${i==bi%3?"on":""}"></i>`).join("")}
 const TG="https://t.me/tgnskmode";
-const PROMO={};
+let DP=null;
+const standalone=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e;if(typeof ME!="undefined"&&ME&&view=="home")R()});
+addEventListener("appinstalled",()=>{DP=null;if(view=="home")R()});
+async function instApp(){if(!DP)return;DP.prompt();try{await DP.userChoice}catch(e){}DP=null;R()}
+const PROMO=(()=>{try{return JSON.parse(localStorage.getItem("ffapromo")||"{}")}catch(e){return{}}})();
+const gpl=()=>{try{return JSON.parse(localStorage.getItem("ffapromolist")||"[]")}catch(e){return[]}};
 let si=0,sh=0,sx=0;
 const SN=3;
 function slide(n){
@@ -225,12 +233,12 @@ function slide(n){
 setInterval(()=>{if(!sh&&view=="home")slide(si+1)},3500);
 const slides=()=>`<div class="st2" id="st2" style="transform:translateX(-${si*100}%)">
   <div class="sd"><img src="${BANNER}" alt=""></div>
-  <a class="sd" href="${TG}" target="_blank" rel="noopener" style="background:linear-gradient(135deg,#071a3d,#0e4fbd 60%,#1aa7e6);text-decoration:none;display:block"><div class="sx"><small>TELEGRAM CHANNEL</small><b>JOIN KARO<br>FREE PROMO CODE PAO</b><span class="tb">✈️ JOIN TELEGRAM ›</span></div></a>
-  <div class="sd" style="background:linear-gradient(135deg,#2a0a12,#c93a12 62%,#ffb21a)"><div class="sx"><small>COINS WALLET</small><b>COINS ADD KARO<br>ENTRY ME JOIN</b><span>Upar 🪙 dabao aur coins add karo</span></div></div></div>
+  <a class="sd" href="${TG}" target="_blank" rel="noopener" style="display:block"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDgwIDYxMyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDcxYTNkIi8+PHN0b3Agb2Zmc2V0PSIuNiIgc3RvcC1jb2xvcj0iIzBlNGZiZCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzFhYTdlNiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDgwIiBoZWlnaHQ9IjYxMyIgZmlsbD0idXJsKCNnKSIvPjxjaXJjbGUgY3g9IjkzMCIgY3k9IjEzMCIgcj0iMjYwIiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIuMDYiLz48Y2lyY2xlIGN4PSIxMDAwIiBjeT0iNTIwIiByPSIxODAiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9Ii4wNSIvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDkwLDE1MCkiPjx0ZXh0IHg9IjAiIHk9IjAiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iNiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iLjg1Ij5URUxFR1JBTSBDSEFOTkVMPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtc3R5bGU9Iml0YWxpYyIgZmlsbD0iI2ZmZmZmZiI+Sk9JTiBLQVJPPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjIwMCIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNjQiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtc3R5bGU9Iml0YWxpYyIgZmlsbD0iI2ZmZDE2NiI+RlJFRSBQUk9NTyBDT0RFIFBBTzwvdGV4dD48cmVjdCB4PSIwIiB5PSIyNTAiIHdpZHRoPSIzMzAiIGhlaWdodD0iNjIiIHJ4PSIzMSIgZmlsbD0iI2ZmZmZmZiIvPjx0ZXh0IHg9IjE2NSIgeT0iMjkyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iIzBmMmE2YiI+Sk9JTiBURUxFR1JBTSDigLo8L3RleHQ+PC9nPjwvc3ZnPg==" alt="Telegram channel join karo" style="width:100%;height:100%;object-fit:cover;display:block"></a>
+  <div class="sd"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDgwIDYxMyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMmEwYTEyIi8+PHN0b3Agb2Zmc2V0PSIuNjIiIHN0b3AtY29sb3I9IiNjOTNhMTIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmIyMWEiLz48L2xpbmVhckdyYWRpZW50PjxyYWRpYWxHcmFkaWVudCBpZD0iYyIgY3g9Ii4zNSIgY3k9Ii4zNSIgcj0iLjciPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiMCIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmIyMWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODczMDAiLz48L3JhZGlhbEdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTA4MCIgaGVpZ2h0PSI2MTMiIGZpbGw9InVybCgjZykiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5MCwxNTApIj48dGV4dCB4PSIwIiB5PSIwIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9IjcwMCIgbGV0dGVyLXNwYWNpbmc9IjYiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9Ii44NSI+Q09JTlMgV0FMTEVUPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtc3R5bGU9Iml0YWxpYyIgZmlsbD0iI2ZmZmZmZiI+Q09JTlMgQUREIEtBUk88L3RleHQ+PHRleHQgeD0iMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3MiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjZmZkMTY2Ij5FTlRSWSBNRSBKT0lOPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjI2MCIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9Ii45Ij5VcGFyIGNvaW4gYnV0dG9uIGRhYmFvIGF1ciBjb2lucyBhZGQga2FybzwvdGV4dD48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoODMwLDMwMCkiPjxjaXJjbGUgcj0iMTUwIiBmaWxsPSJ1cmwoI2MpIiBzdHJva2U9IiNmZmYzYjAiIHN0cm9rZS13aWR0aD0iMTAiLz48Y2lyY2xlIHI9IjExOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjg3MzAwIiBzdHJva2Utd2lkdGg9IjYiIG9wYWNpdHk9Ii42Ii8+PHRleHQgeD0iMCIgeT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iIzdhNGEwMCI+QzwvdGV4dD48L2c+PC9zdmc+" alt="Coins add karo" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
   <div class="dt" id="dt">`+Array.from({length:SN},(_,i)=>`<i class="${i==si?"on":""}"></i>`).join("")+`</div>`;
 function home(){
   const G=[["Solo","x"],["Duo","x"],["Squad","x"],["Clash Squad","x"],["Headshot","x"],["Lone Wolf","x"],["1v1","x"]];
-  return (ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
+  return (DP&&!standalone()?`<div class="inst"><span>📲 FF Esport ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
   <div class="sl" id="sl" ontouchstart="sh=1;sx=event.touches[0].clientX" ontouchend="sh=0;{const d=event.changedTouches[0].clientX-sx;if(Math.abs(d)>40)slide(si+(d<0?1:-1))}">${slides()}</div>
   <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${g[0]}</b></button>`).join("")+`</div>`;
 }
@@ -243,7 +251,7 @@ function list(){
   <div class="chips">`+MP.map(x=>`<button class="${mf==x?"on":""}" onclick="mf='${x}';R()">${x}</button>`).join("")+`</div>`+(L.length?L.map(card).join(""):`<div class="card mu">Is map ya mode me abhi koi match nahi hai.</div>`);
 }
 function pro(){
-  return `<div class="card"><b>👤 ${esc((gu()[ME]||{}).n||"")}</b><div class="mu">${ADM?"Admin account":"@"+esc((gu()[ME]||{}).u||"player")+" · +91 "+esc(ME)}</div><div class="mu">${esc((gu()[ME]||{}).e||"")}</div><button class="b2" style="margin-top:8px" onclick="logout()">LOGOUT</button></div><div class="card"><b>Free Fire Character ID</b><p class="mu">Join karne se pehle apna sahi ID daalo.</p>
+  return `<div class="card"><b>👤 ${esc((gu()[ME]||{}).n||"")}</b><div class="mu">${ADM?"Admin account":"@"+esc((gu()[ME]||{}).u||"player")+" · +91 "+esc(PROF.mobile||"")}</div><div class="mu">${esc((gu()[ME]||{}).e||"")}</div><button class="b2" style="margin-top:8px" onclick="logout()">LOGOUT</button></div><div class="card"><b>Free Fire Character ID</b><p class="mu">Join karne se pehle apna sahi ID daalo.</p>
   <input id="cid" inputmode="numeric" value="${ID.replace(/[^0-9]/g,"")}" placeholder="Character ID" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:10px">
   <button class="btn w100" onclick="ID=$('cid').value.trim();try{localStorage.setItem('ffaid',ID)}catch(e){}alert('Save ho gaya')">SAVE</button></div>`;
 }
@@ -285,10 +293,31 @@ function admin(){
   const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc((UU[p.u]||{}).n||p.u)}<br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=FFEsport%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
   <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
+}
+
+function promoGen(){
+  const L=gpl();
+  return `<div class="card"><b>🎁 Promo Code Banao</b><div class="mu" style="margin:6px 0">Code se user ko coins milenge. Ek user ek code sirf ek baar use kar sakta hai.</div>
+  <input class="ci" id="pgc" type="number" inputmode="numeric" placeholder="Kitne coins milenge (jaise 50)">
+  <input class="ci" id="pgn" placeholder="Code (khali chhodo to random banega)" autocapitalize="characters" autocomplete="off">
+  <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
+  ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.slice().reverse().map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v}</span></div>`).join(""):""}</div>`;
+}
+async function genPromo(){
+  const v=Math.floor(+$("pgc").value);
+  if(!(v>0)){alert("Coins ki sahi number daalo (1 ya usse zyada)");return}
+  let c=$("pgn").value.trim().toUpperCase().replace(/\s/g,"");
+  if(!c){const ch="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r=crypto.getRandomValues(new Uint8Array(8));c="";for(const x of r)c+=ch[x%ch.length]}
+  if(!/^[A-Z0-9_-]{4,20}$/.test(c)){alert("Code 4 se 20 akshar ka ho (sirf A-Z aur 0-9)");return}
+  const {error}=await sb.rpc("create_promo",{p_code:c,p_coins:v});
+  if(error){alert(/duplicate/i.test(error.message)?"Ye code pehle se bana hai":error.message);return}
+  const L=gpl();L.push({c,v,t:Date.now()});
+  try{localStorage.setItem("ffapromolist",JSON.stringify(L))}catch(e){}
+  alert("Code ban gaya: "+c+" (🪙"+v+" coins)");R();
 }
 function addMatch(){
   const v=i=>$(i).value.trim(),r=+v('xw'),x=+v('xx');
@@ -400,8 +429,9 @@ function qrSvg(text,px){
 const UPI="9647315506@fam";
 let CA=0;
 const gc=()=>{try{return JSON.parse(localStorage.getItem("ffac")||"{}")}catch(e){return{}}};
-const bal=()=>gc()[ME]||0;
-const addBal=(u,d)=>{const c=gc();c[u]=(c[u]||0)+d;try{localStorage.setItem("ffac",JSON.stringify(c))}catch(e){}};
+let WAL=0;
+const bal=()=>WAL;
+const addBal=(u,d)=>{if(u==ME)WAL+=d};
 const gw=()=>{try{return JSON.parse(localStorage.getItem("ffaw")||"[]")}catch(e){return[]}};
 const sw=a=>{try{localStorage.setItem("ffaw",JSON.stringify(a))}catch(e){}};
 const WMIN=10;
@@ -437,16 +467,13 @@ function promoCard(){
   <button class="btn w100" onclick="redeem()">COINS PAO</button></div>`;
 }
 async function redeem(){
-  const c=$("pc").value.trim().toUpperCase();
+  const c=$("pc").value.trim();
   if(!c){alert("Promo code daalo");return}
-  if(ME=="admin"){alert("Admin account me promo code nahi chalta");return}
-  let h;try{h=await ph(c)}catch(e){alert("Is browser me promo code check nahi ho sakta");return}
-  const v=PROMO[h];
-  if(!v){alert("Ye promo code sahi nahi hai");return}
-  const u=gpr(),a=u[ME]||[];
-  if(a.includes(h)){alert("Ye promo code tum pehle use kar chuke ho");return}
-  addBal(ME,v);a.push(h);u[ME]=a;try{localStorage.setItem("ffapr",JSON.stringify(u))}catch(e){}
-  alert("🎉 "+v+" coins tumhare wallet me add ho gaye!");R();
+  if(ADM){alert("Admin account me promo code nahi chalta");return}
+  const {data,error}=await sb.rpc("redeem_promo",{p_code:c});
+  if(error){alert(error.message);return}
+  await loadWallet();
+  alert("🎉 "+data+" coins tumhare wallet me add ho gaye!");R();
 }
 function wdCard(){
   const W=gw().filter(w=>w.u==ME).reverse();
@@ -455,7 +482,7 @@ function wdCard(){
   <input class="ci" id="wa" type="number" inputmode="numeric" placeholder="Kitne coins nikalne hain (max ${bal()})">
   <input class="ci" id="wu" placeholder="Tumhara UPI ID (jaise name@bank)" autocapitalize="off" autocomplete="off">
   <button class="btn w100" onclick="subW()">WITHDRAW KARO</button>
-  <div class="mu" style="margin-top:8px">Admin tumhare mobile number (+91 ${esc(ME)}) par call karke paisa bhejega.</div>
+  <div class="mu" style="margin-top:8px">Admin tumhare mobile number (+91 ${esc(PROF.mobile||"")}) par call karke paisa bhejega.</div>
   <div class="mu" style="margin-top:8px;color:#ffcf6b">🎥 Paisa bhejne se pehle admin match ki screen recording maang sakta hai. Isliye har match ki recording sambhal kar rakho. Recording nahi di to withdraw nahi hoga.</div></div>`
   +(W.length?`<h3>Withdraw History</h3><div class="card">`+W.map(w=>`<div class="li"><span>🪙${w.amt} · <span class="mu">${esc(w.upi)}</span></span>${bg(w.s)}</div>`).join("")+`</div>`:"");
 }
@@ -517,29 +544,29 @@ function tick(){
 
 setInterval(tick,1000);
 let AM="login",ME="";
-try{ME=localStorage.getItem("ffase")||""}catch(e){}
 async function hs(p){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("ffa:"+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return"p:"+p}}
-const gu=()=>{try{return JSON.parse(localStorage.getItem("ffau")||"{}")}catch(e){return{}}};
-const su=u=>{try{localStorage.setItem("ffau",JSON.stringify(u))}catch(e){}};
-const am=m=>{AM=m;R()};
-const fld=(id,ph,t)=>`<input id="${id}" type="${t||"text"}" placeholder="${ph}" ${t=="tel"?'inputmode="numeric" maxlength="10"':""}>`;
+
+
+const am=m=>{AM=m;AV={};R()};
+let AV={};
+const fld=(id,ph,t)=>`<input id="${id}" type="${t||"text"}" placeholder="${ph}" value="${esc(AV[id]||"")}" oninput="AV['${id}']=this.value" ${t=="tel"?'inputmode="numeric" maxlength="10"':""}>`;
 function authR(){
   $("ttl").textContent="FF ESPORT";$("nav").innerHTML="";
   let b,l;
   if(AM=="login"){
-    b=`<h3 style="margin-top:0">Login</h3>${fld("am","Mobile, username ya email")}${fld("ap","Password","password")}<button class="btn w100" onclick="doLogin()">LOGIN</button>`;
+    b=`<h3 style="margin-top:0">Login</h3>${fld("am","Username ya mobile number")}${fld("ap","Password","password")}<button class="btn w100" onclick="doLogin()">LOGIN</button>`;
     l=`<a onclick="am('forgot')">FORGOT PASSWORD?</a> | <a onclick="am('signup')">NEW USER? CREATE ACCOUNT</a>`;
   }else if(AM=="signup"){
-    b=`<h3 style="margin-top:0">Create Account</h3>${fld("an","Your name")}${fld("au","Username (A-Z, 0-9, _)")}${fld("ae","Email","email")}${fld("am","Mobile number","tel")}${fld("ap","Password (min 6)","password")}${fld("ap2","Confirm password","password")}<button class="btn w100" onclick="doSign()">CREATE ACCOUNT</button>`;
+    b=`<h3 style="margin-top:0">Create Account</h3>${fld("an","Your name")}${fld("au","Username (A-Z, 0-9, _)")}${fld("am","Mobile number","tel")}${fld("ap","Password (min 6)","password")}${fld("ap2","Confirm password","password")}<button class="btn w100" onclick="doSign()">CREATE ACCOUNT</button>`;
     l=`<a onclick="am('login')">ALREADY HAVE AN ACCOUNT? LOGIN</a>`;
   }else{
-    b=`<h3 style="margin-top:0">Forgot Password</h3>${fld("am","Mobile, username ya email")}${fld("ap","New password (min 6)","password")}${fld("ap2","Confirm new password","password")}<button class="btn w100" onclick="doForgot()">RESET PASSWORD</button>`;
+    b=`<h3 style="margin-top:0">Forgot Password</h3><div class="card" style="font-size:13px;line-height:1.6;margin-bottom:10px"><b>Password reset ke rules:</b><ol style="margin:8px 0 0;padding-left:20px"><li>Sirf WhatsApp par message karo: <b>9874209398</b> (SMS ya call par reset nahi hoga)</li><li>Message me apna <b>username</b> aur <b>transaction ID (UTR)</b> bhejo</li><li>Admin verify karega, username badal sakta hai, phir password reset karega</li><li>Reset hone ke baad naye password se login karna</li></ol></div><a class="btn w100" href="https://wa.me/919874209398" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">WHATSAPP PAR MESSAGE KARO</a>`;
     l=`<a onclick="am('login')">BACK TO LOGIN</a>`;
   }
-  const g=AM=="forgot"?"":`<button class="gbtn" onclick="alert('Google login ke liye server setup chahiye, abhi available nahi hai. Mobile number se login ya account banao.')"><b style="color:#4285f4">G</b> Continue with Google</button>`;
-  $("app").innerHTML=`<div class="au"><div style="text-align:center;margin:8px 0 16px"><img src="${LOGOAPP}" alt="FF Esport" style="width:132px;height:132px;border-radius:50%;display:block;margin:0 auto 6px;box-shadow:0 0 28px rgba(160,30,255,.45)"><h2 style="margin:4px 0 0;font-size:22px;font-family:var(--fh);font-style:italic">FF ESPORT</h2></div><div class="card">${b}</div>${g}<div class="lk">${l}</div><p class="mu" style="text-align:center;margin-top:14px">Account sirf is phone me save hota hai. SMS OTP abhi nahi hai.</p></div>`;
+  const g="";
+  $("app").innerHTML=`<div class="au"><div style="text-align:center;margin:8px 0 16px"><img src="${LOGOAPP}" alt="FF Esport" style="width:132px;height:132px;border-radius:50%;display:block;margin:0 auto 6px;box-shadow:0 0 28px rgba(160,30,255,.45)"><h2 style="margin:4px 0 0;font-size:22px;font-family:var(--fh);font-style:italic">FF ESPORT</h2></div><div class="card">${b}</div>${g}<div class="lk">${l}</div><p class="mu" style="text-align:center;margin-top:14px">Account is phone me save hota hai.</p></div>`;
 }
-function fu(q){const U=gu(),l=q.toLowerCase();return U[q]?q:Object.keys(U).find(k=>(U[k].u||"").toLowerCase()==l||(U[k].e||"").toLowerCase()==l)}
+function fu(q){const U=gu();q=String(q||"").trim();const d=q.replace(/[\s-]/g,"").replace(/^\+?91(?=\d{10}$)/,"");if(/^[6-9]\d{9}$/.test(d)&&U[d])return d;const l=q.toLowerCase();return Object.keys(U).find(k=>(U[k].u||"").toLowerCase()==l)}
 const AS="nXMLUGtPCUlnSS/W66XW8Q==",AH="cdkhKYP7WI53o5bb07CZf32Cc89BN3FcD53wwYxFlLk=";
 async function adminOk(p){
   try{
@@ -549,31 +576,58 @@ async function adminOk(p){
     const e=b(AH);let r=0;for(let i=0;i<32;i++)r|=d[i]^e[i];return r===0;
   }catch(x){return false}
 }
+const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
+let PROF={};
+const gu=()=>ME?{[ME]:{n:PROF.name||"",u:PROF.username||"",e:""}}:{};
+const su=()=>{};
+async function loadMe(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ME="";PROF={};ADM=false;WAL=0;return}
+  ME=session.user.id;
+  const {data:p}=await sb.from("profiles").select("name,username,mobile,is_admin").eq("id",ME).maybeSingle();
+  PROF=p?{name:p.name,username:p.username,mobile:p.mobile}:{};
+  ADM=!!(p&&p.is_admin);
+  await loadWallet();
+}
+async function loadWallet(){
+  const {data}=await sb.from("wallets").select("coins").eq("user_id",ME).maybeSingle();
+  WAL=data?data.coins:0;
+}
+async function spendCoins(n){
+  const {data,error}=await sb.rpc("spend_coins",{p_amt:n});
+  if(error){alert(error.message);return false}
+  WAL=data;return true;
+}
 async function doLogin(){
-  const q=$("am").value.trim(),U=gu(),m=fu(q),u=U[m];
-  if(q.toLowerCase()=="sahid"&&await adminOk($("ap").value)){ADM=true;ME="admin";try{localStorage.setItem("ffase",ME);localStorage.setItem("ffaadm","1")}catch(e){}view="home";R();return}
-  if(!u||u.h!=await hs($("ap").value)){alert("Mobile number ya password galat hai");return}
-  ME=m;try{localStorage.setItem("ffase",m)}catch(e){}R();
+  const q=$("am").value.trim(),p=$("ap").value;
+  if(!q||!p){alert("Username ya mobile aur password dono daalo");return}
+  const {data:email,error:e1}=await sb.rpc("login_email",{identifier:q});
+  if(e1||!email){alert("Username ya mobile number galat hai");return}
+  const {error}=await sb.auth.signInWithPassword({email,password:p});
+  if(error){alert("Password galat hai");return}
+  await loadMe();AV={};R();
 }
 async function doSign(){
-  const n=$("an").value.trim(),un=$("au").value.trim(),em=$("ae").value.trim().toLowerCase(),m=$("am").value.trim(),p=$("ap").value;
+  const n=$("an").value.trim(),un=$("au").value.trim(),m=$("am").value.trim(),p=$("ap").value;
   if(!n||!/^[6-9]\d{9}$/.test(m)){alert("Naam aur sahi 10 digit mobile number daalo");return}
   if(p.length<6||p!=$("ap2").value){alert("Password kam se kam 6 akshar ka ho aur dono baar same ho");return}
   if(!/^[A-Za-z0-9_]{3,15}$/.test(un)){alert("Username 3 se 15 akshar ka ho (sirf A-Z, 0-9 aur _)");return}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){alert("Sahi email daalo");return}
-  const U=gu();if(U[m]){alert("Ye number pehle se registered hai. Login karo.");return}
-  if(Object.values(U).some(x=>(x.e||"")==em)){alert("Ye email pehle se registered hai");return}
-  if(Object.values(U).some(x=>(x.u||"").toLowerCase()==un.toLowerCase())){alert("Ye username le liya gaya hai, doosra chuno");return}
-  U[m]={n,u:un,e:em,h:await hs(p)};su(U);ME=m;try{localStorage.setItem("ffase",m)}catch(e){}R();
+  const email=m+"@ffesport.app";
+  const {error}=await sb.auth.signUp({email,password:p,options:{data:{name:n,username:un,mobile:m}}});
+  if(error){
+    const dup=/Database error|duplicate|already/i.test(error.message);
+    alert(dup?"Ye username ya mobile number pehle se registered hai":"Account nahi bana: "+error.message);
+    return;
+  }
+  const {error:e2}=await sb.auth.signInWithPassword({email,password:p});
+  if(e2){alert("Account ban gaya. Ab login karo.");AM="login";AV={};R();return}
+  await loadMe();AV={};R();
 }
-async function doForgot(){
-  const q=$("am").value.trim(),p=$("ap").value,U=gu(),m=fu(q);
-  if(!m){alert("Is number ya username se koi account nahi hai");return}
-  if(p.length<6||p!=$("ap2").value){alert("Password kam se kam 6 akshar ka ho aur dono baar same ho");return}
-  U[m].h=await hs(p);su(U);alert("Password badal gaya. Ab login karo.");AM="login";R();
+async function logout(){
+  try{await sb.auth.signOut()}catch(e){}
+  ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
-function logout(){ME="";ADM=false;view="home";try{localStorage.removeItem("ffase");localStorage.removeItem("ffaadm")}catch(e){}AM="login";R()}
-R();
+(async()=>{try{await loadMe()}catch(e){}R()})();
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>

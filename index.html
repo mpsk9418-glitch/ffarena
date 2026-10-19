@@ -239,7 +239,7 @@ const slides=()=>`<div class="st2" id="st2" style="transform:translateX(-${si*10
   <div class="dt" id="dt">`+Array.from({length:SN},(_,i)=>`<i class="${i==si?"on":""}"></i>`).join("")+`</div>`;
 function home(){
   const G=[["Free Mode","x"],["Solo","x"],["Duo","x"],["Squad","x"],["Clash Squad","x"],["Headshot","x"],["Lone Wolf","x"],["1v1","x"]];
-  return (DP&&!standalone()?`<div class="inst"><span>📲 FF Esport ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
+  return notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 FF Esport ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
   <div class="sl" id="sl" ontouchstart="sh=1;sx=event.touches[0].clientX" ontouchend="sh=0;{const d=event.changedTouches[0].clientX-sx;if(Math.abs(d)>40)slide(si+(d<0?1:-1))}">${slides()}</div>
   <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${g[0]}</b></button>`).join("")+`</div>`;
 }
@@ -280,7 +280,7 @@ function detail(){
   <div class="card"><div class="g4"><div>🎮<b>BR</b>Type</div><div>👤<b>${m.mo}</b>Mode</div><div>🗺️<b>${m.mp}</b>Map</div><div>💲<b>${m.fee>0?"🪙"+m.fee:"FREE"}</b>Entry</div></div></div>
   <div class="card rl"><b>📜 Rules · har custom me same</b><ol>${RULES.map(r=>`<li>${esc(r)}</li>`).join("")}</ol></div>
   <div class="card"><b>Match Rules</b><div class="li"><span>🗺️ Map</span><b>${m.mp}</b></div><div class="li"><span>🎯 Headshot</span><b>${m.ru}</b></div><div class="li"><span>🔫 Guns</span><b>${m.gn}</b></div></div>
-  <div class="card" style="text-align:center"><div class="mu">Total BR Reward</div><div class="big">₹${m.r}</div></div>
+  <div class="card" style="text-align:center">${roomCard(m)}<div class="mu">Total BR Reward</div><div class="big">₹${m.r}</div></div>
   <div class="card"><b>Prize Breakdown</b><div class="li"><span>🏆 1st Position (Booyah)</span><b>₹5</b></div><div class="li"><span>🥈 2nd Position</span><b>₹3</b></div><div class="li"><span>🥉 3rd Position</span><b>₹1</b></div>
   <div class="li"><span>25 Kills Bonus</span><b>₹80</b></div><div class="li"><span>15 Kills Bonus</span><b>₹30</b></div><div class="li"><span>10 Kills Bonus</span><b>₹10</b></div><div class="li"><span>Per Kill Reward</span><b style="color:var(--rd)">₹0.15 / kill</b></div></div>
   ${ADM?`<div class="card"><b>Joined Players (${m.j})</b>`+((m.pl||[]).length?m.pl.map((q,i)=>`<div class="li"><span>#${i+1} ${esc(q.n)}<br><span class="mu">FF ID: ${esc(q.ff)}</span></span><a href="tel:+91${esc(q.u)}" style="color:var(--gd)">📞 ${esc(q.u)}</a></div>`).join(""):`<div class="mu" style="margin-top:6px">Abhi koi player join nahi hua.</div>`)+`</div>`:""}
@@ -297,7 +297,7 @@ function admin(){
   return promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
-  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
+  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
 }
 
 function promoGen(){
@@ -322,6 +322,13 @@ async function genPromo(){
   const L=gpl();L.push({c,v,m:mx,t:Date.now()});
   try{localStorage.setItem("ffapromolist",JSON.stringify(L))}catch(e){}
   alert("Code ban gaya: "+c+" (🪙"+v+" coins)");R();
+}
+async function setRoom(id){
+  const r=prompt("Match #"+id+" ka Room ID daalo");if(r===null)return;
+  const p=prompt("Room ka password daalo");if(p===null)return;
+  const {error}=await sb.rpc("admin_set_room",{p_id:id,p_room:r,p_pass:p});
+  if(error){alert(error.message);return}
+  await loadMatches();R();alert("Room set ho gaya. Joined players ko notification chala gaya.");
 }
 async function addMatch(){
   const v=i=>$(i).value.trim(),r=+v('xw'),x=+v('xx');
@@ -437,12 +444,12 @@ const gc=()=>{try{return JSON.parse(localStorage.getItem("ffac")||"{}")}catch(e)
 let WAL=0;
 const bal=()=>WAL;
 const addBal=(u,d)=>{if(u==ME)WAL+=d};
-const gw=()=>{try{return JSON.parse(localStorage.getItem("ffaw")||"[]")}catch(e){return[]}};
-const sw=a=>{try{localStorage.setItem("ffaw",JSON.stringify(a))}catch(e){}};
+const gw=()=>WDL;
+const sw=()=>{};
 const WMIN=10;
 const pc=()=>gp().filter(p=>p.s=="pending").length+gw().filter(w=>w.s=="pending").length;
-const gp=()=>{try{return JSON.parse(localStorage.getItem("ffap")||"[]")}catch(e){return[]}};
-const sp=a=>{try{localStorage.setItem("ffap",JSON.stringify(a))}catch(e){}};
+const gp=()=>PYL;
+const sp=()=>{};
 const upiUrl=a=>"upi://pay?pa="+UPI+"&pn=FF%20Esport&am="+a+"&cu=INR&tn=FFCoins";
 function coinV(){
   const P=gp().filter(p=>p.u==ME).reverse();
@@ -514,41 +521,43 @@ function wdCard(){
   <div class="mu" style="margin-top:8px;color:#ffcf6b">🎥 Paisa bhejne se pehle admin match ki screen recording maang sakta hai. Isliye har match ki recording sambhal kar rakho. Recording nahi di to withdraw nahi hoga.</div></div>`
   +(W.length?`<h3>Withdraw History</h3><div class="card">`+W.map(w=>`<div class="li"><span>🪙${w.amt} · <span class="mu">${esc(w.upi)}</span></span>${bg(w.s)}</div>`).join("")+`</div>`:"");
 }
-function subW(){
+async function subW(){
   const a=Math.floor(+$("wa").value),u=$("wu").value.trim();
-  if(ME=="admin"){alert("Admin account se withdraw nahi hota");return}
+  if(ADM){alert("Admin account se withdraw nahi hota");return}
   if(!(a>=WMIN)){alert("Kam se kam "+WMIN+" coins withdraw kar sakte ho");return}
   if(a>bal()){alert("Wallet me sirf "+bal()+" coins hain");return}
   if(!/^[A-Za-z0-9._-]{2,}@[A-Za-z]{2,}$/.test(u)){alert("Sahi UPI ID daalo (jaise name@bank)");return}
   if(!confirm(a+" coins wallet se kat jayenge aur ₹"+a+" "+u+" par bheja jayega. Pakka?"))return;
-  addBal(ME,-a);
-  const w=gw();w.push({id:Date.now(),u:ME,n:(gu()[ME]||{}).n||ME,mob:ME,upi:u,amt:a,s:"pending"});sw(w);
+  const {error}=await sb.rpc("request_withdraw",{p_amt:a,p_upi:u});
+  if(error){alert(error.message);return}
+  await loadWallet();await loadPay();
   alert("Withdraw request chali gayi. Admin tumhe call karke paisa bhejega.");R();
 }
-function setW(id,s){
-  const a=gw(),w=a.find(x=>x.id==id);if(!w||w.s!="pending")return;
+async function setW(id,s){
+  const w=gw().find(x=>x.id==id);if(!w||w.s!="pending")return;
   if(s=="rej"&&!confirm("Reject karne par "+w.amt+" coins user ke wallet me wapas jayenge. Pakka?"))return;
   if(s=="paid"&&!confirm("Kya ₹"+w.amt+" "+w.upi+" par bhej diye?"))return;
-  if(s=="rej")addBal(w.u,w.amt);
-  w.s=s;sw(a);R();
+  const {error}=await sb.rpc("admin_set_withdraw",{p_id:id,p_status:s});
+  if(error){alert(error.message);return}
+  await loadPay();R();
 }
 function genQR(){
   const a=Math.floor(+$("ca").value);
   if(!(a>=10&&a<=500)){alert("10 se 500 ke beech amount daalo");return}
   CA=a;R();
 }
-function subUTR(){
+async function subUTR(){
   const u=$("cu").value.trim();
-  if(!/^\d{12}$/.test(u)){alert("Sahi 12 digit UTR / Transaction ID daalo");return}
-  const a=gp();
-  if(a.some(p=>p.utr==u)){alert("Ye UTR pehle use ho chuka hai");return}
-  a.push({id:Date.now(),u:ME,amt:CA,utr:u,s:"pending"});sp(a);CA=0;
+  const {error}=await sb.rpc("request_coins",{p_amt:CA,p_utr:u});
+  if(error){alert(error.message);return}
+  CA=0;await loadPay();
   alert("Request mil gayi. Payment check hote hi coins add ho jayenge.");R();
 }
-function setC(id,s){
-  const a=gp(),p=a.find(x=>x.id==id);if(!p||p.s!="pending")return;
-  if(s=="ok")addBal(p.u,p.amt);
-  p.s=s;sp(a);R();
+async function setC(id,s){
+  const p=gp().find(x=>x.id==id);if(!p||p.s!="pending")return;
+  const {error}=await sb.rpc("admin_set_payment",{p_id:id,p_status:s=="ok"?"ok":"rej"});
+  if(error){alert(error.message);return}
+  await loadPay();R();
 }
 function R(){
   if(!ME){authR();return}
@@ -606,7 +615,8 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-const gu=()=>ME?{[ME]:{n:PROF.name||"",u:PROF.username||"",e:""}}:{};
+let WDL=[],PYL=[],NM={},NT=[];
+const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){
   const {data:{session}}=await sb.auth.getSession();
@@ -617,6 +627,8 @@ async function loadMe(){
   ADM=!!(p&&p.is_admin);
   await loadWallet();
   await loadMatches();
+  await loadPay();
+  await loadNotif();
 }
 async function loadWallet(){
   const {data}=await sb.from("wallets").select("coins").eq("user_id",ME).maybeSingle();
@@ -630,6 +642,8 @@ async function loadMatches(){
   ]);
   const rows=(ms||[]).map(x=>({id:x.id,mo:x.mode,mp:x.map,ru:x.rules,gn:x.guns,d:x.match_date,tm:x.match_time,r:x.reward,x:x.max_players,j:x.joined_count,fee:x.fee,pl:[]}));
   M.splice(0,M.length,...rows);
+  const {data:rs}=await sb.from("match_rooms").select("match_id,room_id,room_pass");
+  for(const r of (rs||[])){const m=M.find(z=>z.id==r.match_id);if(m)m.room={id:r.room_id,pass:r.room_pass}}
   J={};
   for(const jn of (js||[])){
     const m=M.find(z=>z.id==jn.match_id);
@@ -637,6 +651,33 @@ async function loadMatches(){
     if(jn.user_id==ME)J[m.id]=jn.join_no;
     (m.pl=m.pl||[]).push({u:(jn.profiles&&jn.profiles.mobile)||"",n:(jn.profiles&&jn.profiles.name)||"",ff:jn.ff_id,t:new Date(jn.created_at).getTime()});
   }
+}
+async function loadPay(){
+  if(!ME){WDL=[];PYL=[];NM={};return}
+  const [{data:ws},{data:ps}]=await Promise.all([
+    sb.from("withdrawals").select("id,user_id,name,mobile,upi,amount,status,profiles(name)").order("id",{ascending:false}),
+    sb.from("payment_requests").select("id,user_id,amount,utr,status,profiles(name)").order("id",{ascending:false})
+  ]);
+  NM={};
+  for(const r of [...(ws||[]),...(ps||[])]){if(r.profiles&&r.profiles.name)NM[r.user_id]=r.profiles.name}
+  WDL=(ws||[]).map(x=>({id:x.id,u:x.user_id,n:x.name||"",mob:x.mobile||"",upi:x.upi,amt:x.amount,s:x.status}));
+  PYL=(ps||[]).map(x=>({id:x.id,u:x.user_id,amt:x.amount,utr:x.utr,s:x.status}));
+}
+async function loadNotif(){
+  if(!ME){NT=[];return}
+  const {data}=await sb.from("notifications").select("id,message").eq("read",false).order("id");
+  NT=data||[];
+}
+function notifHtml(){
+  return NT.map(n=>`<div class="nt" onclick="readNt(${n.id})">🔔 ${esc(n.message)}<br><small>Samajh gaye? Tap karke band karo</small></div>`).join("");
+}
+async function readNt(id){
+  await sb.from("notifications").update({read:true}).eq("id",id).eq("user_id",ME);
+  NT=NT.filter(x=>x.id!=id);R();
+}
+function roomCard(m){
+  if(!m.room)return "";
+  return `<div class="card" style="border-color:var(--gd)"><b>🏠 Custom Room</b><div class="li"><span>Room ID</span><b>${esc(m.room.id)}</b></div><div class="li"><span>Password</span><b>${esc(m.room.pass)}</b></div></div>`;
 }
 async function spendCoins(n){
   const {data,error}=await sb.rpc("spend_coins",{p_amt:n});
@@ -673,6 +714,7 @@ async function logout(){
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
 (async()=>{try{await loadMe()}catch(e){}R()})();
+setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>

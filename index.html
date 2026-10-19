@@ -655,12 +655,13 @@ async function loadMatches(){
 async function loadPay(){
   if(!ME){WDL=[];PYL=[];NM={};return}
   const [{data:ws},{data:ps}]=await Promise.all([
-    sb.from("withdrawals").select("id,user_id,name,mobile,upi,amount,status,profiles(name)").order("id",{ascending:false}),
+    sb.from("withdrawals").select("id,user_id,name,mobile,upi,amount,status,profiles(name,mobile)").order("id",{ascending:false}),
     sb.from("payment_requests").select("id,user_id,amount,utr,status,profiles(name)").order("id",{ascending:false})
   ]);
   NM={};
   for(const r of [...(ws||[]),...(ps||[])]){if(r.profiles&&r.profiles.name)NM[r.user_id]=r.profiles.name}
-  WDL=(ws||[]).map(x=>({id:x.id,u:x.user_id,n:x.name||"",mob:x.mobile||"",upi:x.upi,amt:x.amount,s:x.status}));
+  const okNum=v=>/^[6-9][0-9]{9}$/.test(String(v||""));
+  WDL=(ws||[]).map(x=>({id:x.id,u:x.user_id,n:x.name||"",mob:okNum(x.profiles&&x.profiles.mobile)?x.profiles.mobile:(okNum(x.mobile)?x.mobile:""),upi:x.upi,amt:x.amount,s:x.status}));
   PYL=(ps||[]).map(x=>({id:x.id,u:x.user_id,amt:x.amount,utr:x.utr,s:x.status}));
 }
 async function loadNotif(){

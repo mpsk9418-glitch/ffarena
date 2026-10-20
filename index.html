@@ -562,7 +562,7 @@ async function setC(id,s){
 function R(){
   if(!ME){authR();return}
   const t={home:"SURJO FF TOURNAMENT",list:mode,mine:"My Tournaments",lb:"Leaderboard",det:"Match Details",pro:"Profile",adm:"Admin Panel",coin:"Add Coins"};
-  $("ttl").textContent=view=="home"?"@"+(ADM?"sahid (admin)":((gu()[ME]||{}).u||"player")):t[view];
+  $("ttl").textContent=t[view];
   $("app").innerHTML=(view=="adm"&&!ADM?(view="home",home):{home,list,mine,lb,det:detail,pro,adm:admin,coin:coinV}[view])();
   const N=[["home","🎮","Play"],["mine","🏆","My Matches"],["lb","📊","Leaderboard"],["pro","😊","Profile"]];if(ADM)N.push(["adm","🛠️","Admin",pc()]);
   $("nav").innerHTML=N.map(n=>`<button class="${view==n[0]||((view=="det"||view=="list")&&n[0]=="home")?"on":""}" onclick="go('${n[0]}')"><span>${n[1]}</span>${n[2]}${n[3]?`<i class="nb">${n[3]}</i>`:""}</button>`).join("");

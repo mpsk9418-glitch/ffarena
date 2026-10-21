@@ -296,7 +296,7 @@ function admin(){
   const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b><div class="mu" style="margin:4px 0 8px">Approve se pehle bank statement me ye UTR aur amount check karo.</div>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc(p.n||(UU[p.u]||{}).n||p.u)}<br><span class="mu">📞 ${esc(p.mob||"nahi mila")}</span><br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=TOURNAMENT%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return usersCard()+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return roomModal()+usersCard()+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
   <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
@@ -385,13 +385,26 @@ async function setStatus(id){
   if(error){alert(error.message);return}
   await loadMatches();R();
 }
-async function setRoom(id){
-  const r=prompt("Match #"+id+" ka Room ID daalo");if(r===null)return;
-  const p=prompt("Room ka password daalo");if(p===null)return;
-  const {error}=await sb.rpc("admin_set_room",{p_id:id,p_room:r,p_pass:p});
-  if(error){alert(error.message);return}
-  await loadMatches();R();alert("Room set ho gaya. Joined players ko notification chala gaya.");
+function setRoom(id){RM=id;R()}
+function roomModal(){
+  if(RM==null)return "";
+  return `<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:99;padding:16px"><div class="card" style="width:100%;max-width:360px"><b>🏠 Match #${RM} ka Custom Room</b>
+  <div class="mu" style="margin:12px 0 4px">Room ID</div>
+  <input class="ci" id="rmRoom" placeholder="Room ID yahan daalo" autocomplete="off">
+  <div class="mu" style="margin:12px 0 4px">Password</div>
+  <input class="ci" id="rmPass" placeholder="Password yahan daalo" autocomplete="off">
+  <button class="btn w100" onclick="saveRoom()">SAVE KARO</button>
+  <button class="btn w100" style="margin-top:8px;background:#444" onclick="cancelRoom()">CANCEL</button></div></div>`;
 }
+async function saveRoom(){
+  const r=$("rmRoom").value.trim(),p=$("rmPass").value.trim();
+  if(!r||!p){alert("Room ID aur password dono daalo");return}
+  const {error}=await sb.rpc("admin_set_room",{p_id:RM,p_room:r,p_pass:p});
+  if(error){alert(error.message);return}
+  RM=null;await loadMatches();R();
+  alert("Room set ho gaya. Joined players ko notification chala gaya.");
+}
+function cancelRoom(){RM=null;R()}
 async function addMatch(){
   const v=i=>$(i).value.trim(),r=+v('xw'),x=+v('xx');
   if(!v('xd')||!v('xt')||!(r>=0)||v('xw')===''||!(x>=2)){alert('Date, time, reward aur max players (kam se kam 2) bharo');return}
@@ -678,7 +691,7 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null;
+let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null;
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){

@@ -260,7 +260,7 @@ function pro(){
 }
 function mine(){
   const ids=Object.keys(J).filter(id=>M.some(x=>x.id==id));
-  let h=`<div class="st"><div class="card"><div class="mu">TOTAL JOINED</div><b>${ids.length}</b></div><div class="card"><div class="mu">1ST POSITION</div><b>0</b></div></div>
+  let h=`<div class="st" style="grid-template-columns:1fr 1fr 1fr"><div class="card"><div class="mu">JOINED</div><b>${(ST||{}).joined||0}</b></div><div class="card"><div class="mu">JEETA</div><b style="color:#3ddc84">${(ST||{}).won||0}</b></div><div class="card"><div class="mu">HARA</div><b style="color:#ff6b6b">${(ST||{}).lost||0}</b></div><div class="card"><div class="mu">COINS ADD</div><b>🪙${(ST||{}).added||0}</b></div><div class="card"><div class="mu">COINS KATA</div><b>🪙${(ST||{}).deducted||0}</b></div><div class="card"><div class="mu">ABHI BALANCE</div><b>🪙${(ST||{}).balance||0}</b></div></div>
   <div class="seg"><button class="${tab=="active"?"on":""}" onclick="tab='active';R()">ACTIVE</button><button class="${tab=="hist"?"on":""}" onclick="tab='hist';R()">HISTORY</button></div>`;
   if(tab=="hist")return h+`<div class="card mu">Abhi koi purana match nahi hai.</div>`;
   if(!ids.length)return h+`<div class="card mu">Koi match join nahi kiya. Home me jaake JOIN dabao.</div>`;
@@ -293,13 +293,13 @@ function admin(){
   const inp=(id,ph,t,v)=>`<input id="${id}" type="${t||'text'}" placeholder="${ph}" value="${v||''}" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px">`;
   const sel=(id,o)=>`<select id="${id}" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px">${o.map(x=>`<option>${x}</option>`).join('')}</select>`;
   const CR=gp().filter(p=>p.s=="pending"),UU=gu();
-  const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc((UU[p.u]||{}).n||p.u)}<br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
+  const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b><div class="mu" style="margin:4px 0 8px">Approve se pehle bank statement me ye UTR aur amount check karo.</div>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc(p.n||(UU[p.u]||{}).n||p.u)}<br><span class="mu">📞 ${esc(p.mob||"nahi mila")}</span><br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=TOURNAMENT%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return usersCard()+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
-  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
+  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
 }
 
 function promoGen(){
@@ -310,6 +310,40 @@ function promoGen(){
   <input class="ci" id="pgm" type="number" inputmode="numeric" placeholder="Kitne log use kar sakein (jaise 20)">
   <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
   ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.u}/${x.m} use</span><button class="btn" style="padding:6px 10px" onclick="delPromo('${esc(x.c)}')">DELETE</button></div>`).join(""):""}</div>`;
+}
+let UL=[],UH=null;
+async function loadUsers(){
+  if(!ADM){UL=[];return}
+  const {data}=await sb.rpc("admin_list_users");
+  UL=data||[];
+}
+async function openHist(id){
+  const {data,error}=await sb.rpc("admin_user_history",{p_user:id});
+  if(error){alert(error.message);return}
+  UH=data;R();
+}
+function closeHist(){UH=null;R()}
+function usersCard(){
+  if(UH){
+    const h=UH,pr=h.profile||{},M=h.matches||[];
+    const played=M.filter(m=>m.status=="finished").length,live=M.filter(m=>m.status=="live").length,pend=M.filter(m=>m.status!="finished"&&m.status!="live").length;
+    const MS=M.map(m=>`<div class="li"><span>#${m.match} · ${esc(m.mode)} · ${esc(m.date)} ${esc(m.time)} · FF: ${esc(m.ff)} · <b>${esc(m.status)}</b></span></div>`).join("")||'<div class="mu">Koi match join nahi</div>';
+    const P=(h.payments||[]).map(p=>`<div class="li"><span>🪙${p.amount} · UTR ${esc(p.utr)} · ${esc(p.status)}</span></div>`).join("")||'<div class="mu">Koi coin request nahi</div>';
+    const W=(h.withdrawals||[]).map(w=>`<div class="li"><span>🪙${w.amount} · ${esc(w.upi)} · ${esc(w.status)}</span></div>`).join("")||'<div class="mu">Koi withdraw nahi</div>';
+    const C=(h.promos||[]).map(c=>`<div class="li"><span>${esc(c.code)} · 🪙${c.coins}</span></div>`).join("")||'<div class="mu">Koi promo use nahi</div>';
+    return `<div class="card"><button class="btn w100" onclick="closeHist()">← BACK</button>
+    <b>👤 ${esc(pr.name||"")} (@${esc(pr.username||"")})</b>${pr.admin?' <b>· ADMIN</b>':''}
+    <div class="mu" style="margin:6px 0">+91 ${esc(pr.mobile||"")} · Joined: ${esc(String(pr.joined||"").slice(0,10))}</div>
+    <div class="li"><span>Wallet</span><b>🪙${h.coins||0}</b></div>
+    <div class="li"><span>Total added (payment + promo)</span><b>🪙${h.added||0}</b></div>
+    <div class="li"><span>Total withdrawn (paid)</span><b>🪙${h.withdrawn||0}</b></div>
+    <div class="li"><span>Total spent on matches</span><b>🪙${h.spent||0}</b></div>
+    <h3 style="margin:12px 0 4px;font-size:14px">Matches: ${M.length} total · ${played} played · ${live} live · ${pend} pending</h3>${MS}
+    <h3 style="margin:12px 0 4px;font-size:14px">Coin requests (payment)</h3>${P}
+    <h3 style="margin:12px 0 4px;font-size:14px">Withdraws</h3>${W}
+    <h3 style="margin:12px 0 4px;font-size:14px">Promo codes</h3>${C}</div>`;
+  }
+  return `<div class="card"><b>👥 Users & History</b><div class="mu" style="margin:6px 0">Har user ki puri history yahan dekh sakte ho.</div>${UL.length?UL.map(u=>`<div class="li"><span><b>${esc(u.username)}</b> · +91 ${esc(u.mobile)} · 🪙${u.coins}</span><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button></div>`).join(""):'<div class="mu">Abhi koi user nahi hai</div>'}</div>`;
 }
 async function loadPromos(){
   if(!ADM){PRL=[];return}
@@ -337,6 +371,19 @@ async function delPromo(c){
   const {error}=await sb.rpc("admin_delete_promo",{p_code:c});
   if(error){alert(error.message);return}
   await loadPromos();R();
+}
+async function setStatus(id){
+  const st=prompt("Match #"+id+" ka status likho: upcoming, live ya finished");if(st===null)return;
+  const v=st.trim().toLowerCase();
+  if(v=="finished"){
+    const w=prompt("Jeetne wale player(s) ka username likho (ek se zyada ho to comma laga kar: abc, xyz)");if(w===null)return;
+    const {error}=await sb.rpc("admin_finish_match",{p_match_id:id,p_winners:w});
+    if(error){alert(error.message);return}
+    await loadMatches();R();return;
+  }
+  const {error}=await sb.rpc("admin_set_match_status",{p_id:id,p_status:v});
+  if(error){alert(error.message);return}
+  await loadMatches();R();
 }
 async function setRoom(id){
   const r=prompt("Match #"+id+" ka Room ID daalo");if(r===null)return;
@@ -468,7 +515,7 @@ const sp=()=>{};
 const upiUrl=a=>"upi://pay?pa="+UPI+"&pn=TOURNAMENT&am="+a+"&cu=INR&tn=FFCoins";
 function coinV(){
   const P=gp().filter(p=>p.u==ME).reverse();
-  const bg=s=>s=="ok"?'<span class="bd o">✅ Coins add ho gaye</span>':s=="rej"?'<span class="bd x">❌ Reject</span>':'<span class="bd p">⏳ Verification pending</span>';
+  const bg=s=>s=="ok"?'<span class="bd o">✅ Coins add ho gaye</span>':s=="rej"?'<span class="bd x">❌ Reject</span>':'<span class="bd p">⏳ Pending · admin check karega</span>';
   return `<div class="card" style="text-align:center"><div class="mu">YOUR COINS</div><div class="big">🪙 ${bal()}</div></div>
   <div class="card"><b>Coins add karo</b><div class="mu" style="margin:4px 0 10px">1 coin = ₹1 · Minimum 10 · Maximum 500</div>
   <input class="ci" id="ca" type="number" inputmode="numeric" min="10" max="500" placeholder="Amount (10 - 500)" value="${CA||""}">
@@ -479,7 +526,8 @@ function coinV(){
   <div class="mu">UPI ID: <b style="color:var(--tx)">${UPI}</b></div>
   <a class="btn" href="${upiUrl(CA)}" style="display:block;text-decoration:none;margin-top:12px">UPI APP SE PAY KARO</a>
   <div class="mu" style="margin-top:8px">Isi phone se pay karna ho to upar wala button dabao, dusre phone se ho to QR scan karo.</div></div>
-  <div class="card"><b>Payment ke baad</b><div class="mu" style="margin:4px 0 10px">Apne UPI app se 12 digit Transaction ID (UTR) daalo</div>
+  <div class="card"><b>Kaise karein</b><ol style="margin:8px 0 0;padding-left:20px;line-height:1.6"><li>Upar diye UPI ID ya QR se rakam bhejo</li><li>Payment ke baad 12 digit UTR copy karo</li><li>Neeche UTR daal kar VERIFY KARO dabao</li><li>Admin bank me paisa aane ke baad approve karega, isme kuch samay lag sakta hai</li></ol><div class="mu" style="margin-top:8px">UPI ID: ${UPI}</div></div>
+   <div class="card"><b>Payment ke baad</b><div class="mu" style="margin:4px 0 10px">Apne UPI app se 12 digit Transaction ID (UTR) daalo</div>
   <input class="ci" id="cu" inputmode="numeric" maxlength="12" placeholder="12 digit UTR number">
   <button class="btn w100" onclick="subUTR()">VERIFY KARO</button></div>`:"")
   +accCard()
@@ -630,7 +678,7 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-let WDL=[],PYL=[],NM={},NT=[],PRL=[];
+let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null;
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){
@@ -645,10 +693,17 @@ async function loadMe(){
   await loadPay();
   await loadNotif();
   await loadPromos();
+  await loadUsers();
+}
+async function loadStats(){
+  if(!ME){ST=null;return}
+  const {data}=await sb.rpc("my_stats");
+  ST=data||null;
 }
 async function loadWallet(){
   const {data}=await sb.from("wallets").select("coins").eq("user_id",ME).maybeSingle();
   WAL=data?data.coins:0;
+  await loadStats();
 }
 async function loadMatches(){
   if(!ME){M.splice(0,M.length);J={};return}
@@ -672,13 +727,13 @@ async function loadPay(){
   if(!ME){WDL=[];PYL=[];NM={};return}
   const [{data:ws},{data:ps}]=await Promise.all([
     sb.from("withdrawals").select("id,user_id,name,mobile,upi,amount,status,profiles(name,mobile)").order("id",{ascending:false}),
-    sb.from("payment_requests").select("id,user_id,amount,utr,status,profiles(name)").order("id",{ascending:false})
+    sb.from("payment_requests").select("id,user_id,amount,utr,status,profiles(name,mobile)").order("id",{ascending:false})
   ]);
   NM={};
   for(const r of [...(ws||[]),...(ps||[])]){if(r.profiles&&r.profiles.name)NM[r.user_id]=r.profiles.name}
   const okNum=v=>/^[6-9][0-9]{9}$/.test(String(v||""));
   WDL=(ws||[]).map(x=>({id:x.id,u:x.user_id,n:x.name||"",mob:okNum(x.profiles&&x.profiles.mobile)?x.profiles.mobile:(okNum(x.mobile)?x.mobile:""),upi:x.upi,amt:x.amount,s:x.status}));
-  PYL=(ps||[]).map(x=>({id:x.id,u:x.user_id,amt:x.amount,utr:x.utr,s:x.status}));
+  PYL=(ps||[]).map(x=>({id:x.id,u:x.user_id,amt:x.amount,utr:x.utr,s:x.status,mob:(x.profiles&&x.profiles.mobile)||"",n:(x.profiles&&x.profiles.name)||""}));
 }
 async function loadNotif(){
   if(!ME){NT=[];return}

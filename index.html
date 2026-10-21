@@ -345,6 +345,25 @@ function usersCard(){
   }
   return `<div class="card"><b>👥 Users & History</b><div class="mu" style="margin:6px 0">Har user ki puri history yahan dekh sakte ho.</div>${UL.length?UL.map(u=>`<div class="li"><span><b>${esc(u.username)}</b> · +91 ${esc(u.mobile)} · 🪙${u.coins}</span><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button></div>`).join(""):'<div class="mu">Abhi koi user nahi hai</div>'}</div>`;
 }
+async function subscribePush(){
+  try{
+    if(!ME||!("serviceWorker" in navigator)||!("PushManager" in window)||Notification.permission!=="granted")return;
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:VAPID_PUB});
+    const j=sub.toJSON();
+    await sb.from("push_subscriptions").upsert({user_id:ME,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"endpoint"});
+  }catch(e){}
+}
+function startRealtime(){
+  if(!ME||window._rtUser===ME)return;
+  if(window._rt){try{sb.removeChannel(window._rt)}catch(e){}}
+  window._rtUser=ME;
+  subscribePush();
+  window._rt=sb.channel("n-"+ME).on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"user_id=eq."+ME},async()=>{
+    await loadNotif();osNotify(NT);await loadMatches();R();
+  }).subscribe();
+}
 async function loadPromos(){
   if(!ADM){PRL=[];return}
   const {data}=await sb.rpc("admin_list_promos");
@@ -692,6 +711,7 @@ async function adminOk(p){
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
 let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null,SEEN=new Set();
+const VAPID_PUB="BHF1_-BAc19VzDvSEPUaHbg0397CkyAUFgKvCcHbBle_4tHDxPL-28kOjw4hbfeN-miwtgWGt5a8LiohJJqsZFI";
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){
@@ -707,6 +727,7 @@ async function loadMe(){
   await loadNotif();
   await loadPromos();
   await loadUsers();
+  startRealtime();
 }
 async function loadStats(){
   if(!ME){ST=null;return}
@@ -767,7 +788,7 @@ function permBtn(){
 }
 function askNotif(){
   if(!("Notification" in window))return alert("Ye phone notification support nahi karta");
-  Notification.requestPermission().then(p=>{R();if(p==="granted")alert("Notification on ho gaya");});
+  Notification.requestPermission().then(async p=>{if(p==="granted")await subscribePush();R();if(p==="granted")alert("Notification on ho gaya");});
 }
 function osNotify(list){
   if(!("Notification" in window)||Notification.permission!=="granted"||!navigator.serviceWorker)return;
@@ -776,7 +797,7 @@ function osNotify(list){
       if(SEEN.has(n.id))return;
       SEEN.add(n.id);
       const body=n.room_id?("Room ID: "+n.room_id+"\nPassword: "+(n.room_pass||"")):n.message;
-      reg.showNotification("Match room tayyar hai",{body,tag:"room-"+n.id,icon:"icon-192.png"});
+      reg.showNotification("Match room tayyar hai",{body,tag:"room-"+n.id,icon:"icon-192.png",badge:"icon-192.png",requireInteraction:true,renotify:true,vibrate:[300,150,300]});
     });
   }).catch(()=>{});
 }

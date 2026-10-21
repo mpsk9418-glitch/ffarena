@@ -303,13 +303,18 @@ function admin(){
 }
 
 function promoGen(){
-  const L=gpl();
-  return `<div class="card"><b>🎁 Promo Code Banao</b><div class="mu" style="margin:6px 0">Code se user ko coins milenge. Ek user ek code sirf ek baar use kar sakta hai.</div>
+  const L=PRL;
+  return `<div class="card"><b>🎁 Promo Code Banao</b><div class="mu" style="margin:6px 0">Code se user ko coins milenge. Har code ki limit hai. Sab admins ko same list dikhegi.</div>
   <input class="ci" id="pgc" type="number" inputmode="numeric" placeholder="Kitne coins milenge (jaise 50)">
   <input class="ci" id="pgn" placeholder="Code (khali chhodo to random banega)" autocapitalize="characters" autocomplete="off">
   <input class="ci" id="pgm" type="number" inputmode="numeric" placeholder="Kitne log use kar sakein (jaise 20)">
   <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
-  ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.slice().reverse().map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.m||1} log</span></div>`).join(""):""}</div>`;
+  ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.u}/${x.m} use</span><button class="btn" style="padding:6px 10px" onclick="delPromo('${esc(x.c)}')">DELETE</button></div>`).join(""):""}</div>`;
+}
+async function loadPromos(){
+  if(!ADM){PRL=[];return}
+  const {data}=await sb.rpc("admin_list_promos");
+  PRL=(data||[]).map(x=>({c:x.code,v:x.coins,m:x.max_uses,u:x.used}));
 }
 async function genPromo(){
   const v=Math.floor(+$("pgc").value);
@@ -321,9 +326,17 @@ async function genPromo(){
   if(!(mx>0)){alert("Batao kitne log ye code use kar sakte hain (1 ya usse zyada)");return}
   const {error}=await sb.rpc("create_promo",{p_code:c,p_coins:v,p_max:mx});
   if(error){alert(/duplicate/i.test(error.message)?"Ye code pehle se bana hai":error.message);return}
-  const L=gpl();L.push({c,v,m:mx,t:Date.now()});
-  try{localStorage.setItem("ffapromolist",JSON.stringify(L))}catch(e){}
-  alert("Code ban gaya: "+c+" (🪙"+v+" coins)");R();
+  await loadPromos();R();alert("Code ban gaya: "+c+" (🪙"+v+" coins)");
+}
+async function delPromo(c){
+  const x=PRL.find(p=>p.c==c);if(!x)return;
+  const msg=x.u>0
+    ?"Code "+c+" "+x.u+" baar use ho chuka hai. Delete karne par ye code aage use nahi hoga. Jin logon ne pehle le liye, unke coins wapas nahi jayenge. Pakka delete karein?"
+    :"Code "+c+" delete karein? Ye abhi tak kisi ne use nahi kiya.";
+  if(!confirm(msg))return;
+  const {error}=await sb.rpc("admin_delete_promo",{p_code:c});
+  if(error){alert(error.message);return}
+  await loadPromos();R();
 }
 async function setRoom(id){
   const r=prompt("Match #"+id+" ka Room ID daalo");if(r===null)return;
@@ -617,7 +630,7 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-let WDL=[],PYL=[],NM={},NT=[];
+let WDL=[],PYL=[],NM={},NT=[],PRL=[];
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){
@@ -631,6 +644,7 @@ async function loadMe(){
   await loadMatches();
   await loadPay();
   await loadNotif();
+  await loadPromos();
 }
 async function loadWallet(){
   const {data}=await sb.from("wallets").select("coins").eq("user_id",ME).maybeSingle();

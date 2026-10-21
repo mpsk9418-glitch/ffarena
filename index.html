@@ -241,7 +241,7 @@ const slides=()=>`<div class="st2" id="st2" style="transform:translateX(-${si*10
   <div class="dt" id="dt">`+Array.from({length:SN},(_,i)=>`<i class="${i==si?"on":""}"></i>`).join("")+`</div>`;
 function home(){
   const G=[["Free Mode","x"],["Solo","x"],["Duo","x"],["Squad","x"],["Clash Squad","x"],["Headshot","x"],["Lone Wolf","x"],["1v1","x"]];
-  return permBtn()+notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 TOURNAMENT ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
+  return notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 TOURNAMENT ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
   <div class="sl" id="sl" ontouchstart="sh=1;sx=event.touches[0].clientX" ontouchend="sh=0;{const d=event.changedTouches[0].clientX-sx;if(Math.abs(d)>40)slide(si+(d<0?1:-1))}">${slides()}</div>
   <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${g[0]}</b></button>`).join("")+`</div>`;
 }
@@ -786,6 +786,12 @@ function permBtn(){
   if(!("Notification" in window)||Notification.permission!=="default")return "";
   return `<div class="card" style="margin-bottom:10px"><b>🔔 Notification on karo</b><div class="mu" style="margin:6px 0">Room ID aur password ki notification phone par aayegi.</div><button class="btn w100" onclick="askNotif()">ALLOW KARO</button></div>`;
 }
+function autoAsk(){
+  if(!("Notification" in window)||Notification.permission!=="default")return;
+  const go=()=>{Notification.requestPermission().then(p=>{if(p==="granted")subscribePush();}).catch(()=>{})};
+  go();
+  document.addEventListener("click",()=>{if(Notification.permission==="default")go()},{once:true});
+}
 function askNotif(){
   if(!("Notification" in window))return alert("Ye phone notification support nahi karta");
   Notification.requestPermission().then(async p=>{if(p==="granted")await subscribePush();R();if(p==="granted")alert("Notification on ho gaya");});
@@ -846,7 +852,7 @@ async function logout(){
   try{await sb.auth.signOut()}catch(e){}
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
-(async()=>{try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));R()})();
+(async()=>{try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
 setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();osNotify(NT);if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>

@@ -241,7 +241,7 @@ const slides=()=>`<div class="st2" id="st2" style="transform:translateX(-${si*10
   <div class="dt" id="dt">`+Array.from({length:SN},(_,i)=>`<i class="${i==si?"on":""}"></i>`).join("")+`</div>`;
 function home(){
   const G=[["Free Mode","x"],["Solo","x"],["Duo","x"],["Squad","x"],["Clash Squad","x"],["Headshot","x"],["Lone Wolf","x"],["1v1","x"]];
-  return notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 TOURNAMENT ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
+  return permBtn()+notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 TOURNAMENT ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
   <div class="sl" id="sl" ontouchstart="sh=1;sx=event.touches[0].clientX" ontouchend="sh=0;{const d=event.changedTouches[0].clientX-sx;if(Math.abs(d)>40)slide(si+(d<0?1:-1))}">${slides()}</div>
   <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${g[0]}</b></button>`).join("")+`</div>`;
 }
@@ -691,7 +691,7 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null;
+let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null,SEEN=new Set();
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};
 async function loadMe(){
@@ -761,6 +761,25 @@ function cp(t){
     navigator.clipboard.writeText(t).then(()=>alert("Copy ho gaya: "+t)).catch(()=>prompt("Ye copy karo:",t));
   }else{prompt("Ye copy karo:",t)}
 }
+function permBtn(){
+  if(!("Notification" in window)||Notification.permission!=="default")return "";
+  return `<div class="card" style="margin-bottom:10px"><b>🔔 Notification on karo</b><div class="mu" style="margin:6px 0">Room ID aur password ki notification phone par aayegi.</div><button class="btn w100" onclick="askNotif()">ALLOW KARO</button></div>`;
+}
+function askNotif(){
+  if(!("Notification" in window))return alert("Ye phone notification support nahi karta");
+  Notification.requestPermission().then(p=>{R();if(p==="granted")alert("Notification on ho gaya");});
+}
+function osNotify(list){
+  if(!("Notification" in window)||Notification.permission!=="granted"||!navigator.serviceWorker)return;
+  navigator.serviceWorker.ready.then(reg=>{
+    list.forEach(n=>{
+      if(SEEN.has(n.id))return;
+      SEEN.add(n.id);
+      const body=n.room_id?("Room ID: "+n.room_id+"\nPassword: "+(n.room_pass||"")):n.message;
+      reg.showNotification("Match room tayyar hai",{body,tag:"room-"+n.id,icon:"icon-192.png"});
+    });
+  }).catch(()=>{});
+}
 function notifHtml(){
   return NT.map(n=>`<div class="nt" onclick="readNt(${n.id})">🔔 ${esc(n.message)}${n.room_id?`<div style="margin-top:8px">Room ID: <b>${esc(n.room_id)}</b>${cpBtn(n.room_id)}</div><div style="margin-top:6px">Password: <b>${esc(n.room_pass||"")}</b>${cpBtn(n.room_pass||"")}</div>`:""}<br><small>Samajh gaye? Tap karke band karo</small></div>`).join("");
 }
@@ -806,8 +825,8 @@ async function logout(){
   try{await sb.auth.signOut()}catch(e){}
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
-(async()=>{try{await loadMe()}catch(e){}R()})();
-setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();if(NT.length!==b){await loadMatches();R()}},60000);
+(async()=>{try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));R()})();
+setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();osNotify(NT);if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>

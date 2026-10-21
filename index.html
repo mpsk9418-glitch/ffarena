@@ -740,8 +740,16 @@ async function loadNotif(){
   const {data}=await sb.from("notifications").select("id,message").eq("read",false).order("id");
   NT=data||[];
 }
+function cpBtn(v){
+  return `<button class="btn" style="padding:4px 10px;margin-left:6px" data-v="${esc(v)}" onclick="event.stopPropagation();cp(this.dataset.v)">COPY</button>`;
+}
+function cp(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>alert("Copy ho gaya: "+t)).catch(()=>prompt("Ye copy karo:",t));
+  }else{prompt("Ye copy karo:",t)}
+}
 function notifHtml(){
-  return NT.map(n=>`<div class="nt" onclick="readNt(${n.id})">🔔 ${esc(n.message)}<br><small>Samajh gaye? Tap karke band karo</small></div>`).join("");
+  return NT.map(n=>`<div class="nt" onclick="readNt(${n.id})">🔔 ${esc(n.message)}${n.room_id?`<div style="margin-top:8px">Room ID: <b>${esc(n.room_id)}</b>${cpBtn(n.room_id)}</div><div style="margin-top:6px">Password: <b>${esc(n.room_pass||"")}</b>${cpBtn(n.room_pass||"")}</div>`:""}<br><small>Samajh gaye? Tap karke band karo</small></div>`).join("");
 }
 async function readNt(id){
   await sb.from("notifications").update({read:true}).eq("id",id).eq("user_id",ME);
@@ -749,7 +757,7 @@ async function readNt(id){
 }
 function roomCard(m){
   if(!m.room)return "";
-  return `<div class="card" style="border-color:var(--gd)"><b>🏠 Custom Room</b><div class="li"><span>Room ID</span><b>${esc(m.room.id)}</b></div><div class="li"><span>Password</span><b>${esc(m.room.pass)}</b></div></div>`;
+  return `<div class="card" style="border-color:var(--gd)"><b>🏠 Custom Room</b><div class="li"><span>Room ID: <b>${esc(m.room.id)}</b></span>${cpBtn(m.room.id)}</div><div class="li"><span>Password: <b>${esc(m.room.pass)}</b></span>${cpBtn(m.room.pass)}</div></div>`;
 }
 async function spendCoins(n){
   const {data,error}=await sb.rpc("spend_coins",{p_amt:n});

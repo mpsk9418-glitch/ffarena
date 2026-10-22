@@ -355,6 +355,23 @@ async function subscribePush(){
     await sb.from("push_subscriptions").upsert({user_id:ME,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"endpoint"});
   }catch(e){}
 }
+async function checkMaint(){
+  let until=null;
+  try{
+    const {data}=await sb.from("app_settings").select("value").eq("key","maintenance_until").maybeSingle();
+    if(data&&data.value&&new Date(data.value)>new Date())until=new Date(data.value);
+  }catch(e){}
+  let el=document.getElementById("maint");
+  if(!until){if(el)el.remove();return}
+  if(!el){
+    el=document.createElement("div");
+    el.id="maint";
+    el.style.cssText="position:fixed;inset:0;z-index:99999;background:#0a0d16;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif";
+    document.body.appendChild(el);
+  }
+  el.innerHTML='<div><div style="font-size:48px">🛠️</div><h2 style="margin:12px 0 8px">MAINTENANCE MODE</h2><p style="opacity:.85;line-height:1.6">Ye app abhi update ho raha hai. Thodi der baad phir se kholein.</p><p style="margin-top:14px;opacity:.7">Wapas chalu hoga: <b id="mtime"></b></p></div>';
+  const t=document.getElementById("mtime");if(t)t.textContent=until.toLocaleString("en-IN");
+}
 function startRealtime(){
   if(!ME||window._rtUser===ME)return;
   if(window._rt){try{sb.removeChannel(window._rt)}catch(e){}}
@@ -875,7 +892,8 @@ async function logout(){
   try{await sb.auth.signOut()}catch(e){}
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
-(async()=>{try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
+(async()=>{await checkMaint();try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
+setInterval(checkMaint,60000);
 setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();osNotify(NT);if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>

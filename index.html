@@ -251,7 +251,7 @@ function list(){
   const L=M.filter(m=>m.mo==mode&&(mf=="All"||m.mp==mf));
   const MP=["All","Bermuda","Kalahari","Purgatory"];
   return `<div class="row" style="margin-bottom:10px"><button class="back" onclick="go('home')">←</button><b>${mode} Matches</b></div>
-  <div class="chips">`+MP.map(x=>`<button class="${mf==x?"on":""}" onclick="mf='${x}';R()">${x}</button>`).join("")+`</div>`+(L.length?L.map(card).join(""):`<div class="card mu">Is map ya mode me abhi koi match nahi hai.</div>`);
+  <div class="chips">`+MP.map(x=>`<button class="${mf==x?"on":""}" onclick="mf='${x}';R()">${x}</button>`).join("")+`</div>`+(L.length?L.map(m=>card(m)+`<button class="btn w100" style="margin:-6px 0 12px" onclick="openDet(${m.id})">DETAILS</button>`).join("")+detModal():`<div class="card mu">Is map ya mode me abhi koi match nahi hai.</div>`);
 }
 function pro(){
   return `<div class="card"><b>👤 ${esc((gu()[ME]||{}).n||"")}</b><div class="mu">${ADM?"Admin account":"@"+esc((gu()[ME]||{}).u||"player")+" · +91 "+esc(PROF.mobile||"")}</div><div class="mu">${esc((gu()[ME]||{}).e||"")}</div><button class="b2" style="margin-top:8px" onclick="logout()">LOGOUT</button></div><div class="card"><b>Free Fire Character ID</b><p class="mu">Join karne se pehle apna sahi ID daalo.</p>
@@ -424,6 +424,29 @@ async function saveRoom(){
   alert("Room set ho gaya. Joined players ko notification chala gaya.");
 }
 function cancelRoom(){RM=null;R()}
+async function openDet(id){
+  const {data,error}=await sb.rpc("match_details",{p_match_id:id});
+  if(error){alert(error.message);return}
+  DTD=data;DTM=id;R();
+}
+function closeDet(){DTM=null;DTD=null;R()}
+function detModal(){
+  if(DTM==null||!DTD)return "";
+  const sz=DTD.team_size||1,P=DTD.players||[],teams=Math.ceil((DTD.max||0)/sz);
+  let h="";
+  for(let t=1;t<=teams;t++){
+    const mem=P.filter(x=>x.team==t);
+    let slots="";
+    for(let k=0;k<sz;k++){
+      const p=mem[k];
+      slots+=p
+        ?`<div class="li"><span>UID: <b>${esc(p.uid)}</b>${ADM&&p.name?` · ${esc(p.name)} · @${esc(p.username)} · +91 ${esc(p.mobile||"")}`:""}</span></div>`
+        :`<div class="li"><span class="mu">Khali slot</span></div>`;
+    }
+    h+=`<div class="card"><b>Team ${t}</b> <span class="mu">${mem.length}/${sz}</span>${slots}</div>`;
+  }
+  return `<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;overflow:auto;padding:16px"><div style="max-width:420px;margin:0 auto"><div class="card"><b>📋 ${esc(DTD.mode||"")} Details</b><div class="mu" style="margin:6px 0">Joined: ${P.length}/${DTD.max||0}</div><button class="btn w100" onclick="closeDet()">BAND KARO</button></div>${h}</div></div>`;
+}
 async function addMatch(){
   const v=i=>$(i).value.trim(),r=+v('xw'),x=+v('xx');
   if(!v('xd')||!v('xt')||!(r>=0)||v('xw')===''||!(x>=2)){alert('Date, time, reward aur max players (kam se kam 2) bharo');return}
@@ -710,7 +733,7 @@ async function adminOk(p){
 }
 const sb=supabase.createClient("https://qjazfuknqqdyeqnnygjm.supabase.co","sb_publishable_n1ksNXNtUVxod0ZmMrD0Ew_rmQF_PfI");
 let PROF={};
-let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null,SEEN=new Set();
+let WDL=[],PYL=[],NM={},NT=[],PRL=[],ST=null,RM=null,SEEN=new Set(),DTM=null,DTD=null;
 const VAPID_PUB="BHF1_-BAc19VzDvSEPUaHbg0397CkyAUFgKvCcHbBle_4tHDxPL-28kOjw4hbfeN-miwtgWGt5a8LiohJJqsZFI";
 const gu=()=>{const o=Object.assign({},NM);if(ME)o[ME]={n:PROF.name||"",u:PROF.username||"",e:""};return o};
 const su=()=>{};

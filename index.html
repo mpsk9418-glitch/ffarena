@@ -349,7 +349,10 @@ function usersCard(){
     <h3 style="margin:12px 0 4px;font-size:14px">Promo codes</h3>${C}
     <h3 style="margin:12px 0 4px;font-size:14px">Ban / Wallet log (admin)</h3>${aAct.map(a=>`<div class="li"><span>${esc(a.action)} · ${esc(a.detail||"")} · <span class="mu">${esc(String(a.created_at).slice(0,16).replace("T"," "))}</span></span></div>`).join("")||'<div class="mu">Koi record nahi</div>'}</div>`;
   }
-  return `<div class="card"><b>👥 Users & History (${UL.length})</b><div class="mu" style="margin:6px 0">User ID, username, naam ya mobile se search karo.</div>
+  const portfolioTotal=UL.reduce((sum,u)=>sum+(Number(u.coins)||0),0);
+  return `<div class="card"><b>👥 USER PORTFOLIO (${UL.length})</b>
+  <div class="st" style="margin:10px 0"><div class="stat"><div class="mu">TOTAL USERS</div><b>${UL.length}</b></div><div class="stat"><div class="mu">TOTAL WALLET BALANCE</div><b>🪙 ${portfolioTotal.toLocaleString('en-IN')}</b></div></div>
+  <div class="mu" style="margin:6px 0">Username, User ID, name ya mobile se search karo. Har user ka wallet aur rank yahin dekho.</div>
   <input class="ci" placeholder="Search user..." value="${esc(aQ)}" oninput="aQ=this.value;$('ulist').innerHTML=userList()"><div id="ulist">${userList()}</div></div>`;
 }
 function userList(){
@@ -358,12 +361,12 @@ function userList(){
   if(!L.length)return '<div class="mu">Koi user nahi mila</div>';
   return L.map(u=>{
     const fl=(u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':'');
-    return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username)}</b>${fl}<br><span class="mu">${esc(u.name||"")} · +91 ${esc(u.mobile)}</span><br><span class="mu">🪙 <b>${u.coins}</b> coins · 🎮 <b>${JC[u.id]||0}</b> match</span><br><span class="mu" style="font-size:10px;user-select:all;word-break:break-all">UID: ${esc(String(u.id))}</span></span>
+    return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username||"No username")}</b>${fl}<br><span class="mu">${esc(u.name||"Name unavailable")} · +91 ${esc(u.mobile||"Mobile unavailable")}</span><br><span class="mu">💼 Wallet: <b>🪙 ${(Number(u.coins)||0).toLocaleString('en-IN')}</b> · 🏆 Rank: <b>${u.rank||"—"}</b> · 🎮 <b>${JC[u.id]||0}</b> matches</span><br><span class="mu" style="font-size:10px;user-select:all;word-break:break-all">UID: ${esc(String(u.id))}</span></span>
     <span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
     <button class="btn" style="padding:6px 10px" onclick="setUserRank('${u.id}',${u.rank||0})">RANK ${u.rank||'—'}</button><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button>
-    <button class="btn" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button>
+    <button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN ID':'BAN ID'}</button>
     <button class="btn" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button></span></div>`}).join("");
 }
 async function setUserRank(id,current){

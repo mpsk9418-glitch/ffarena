@@ -411,9 +411,21 @@ async function walletAdj(id,sign){
   await loadUsers();R();
 }
 function dashCard(){
-  const d=aDash;if(!d)return `<div class="card"><b>📊 Dashboard</b><div class="mu">Dashboard ke liye Supabase me admin_control.sql run karo.</div></div>`;
-  const c=(t,v)=>`<div class="card"><b>${v}</b><div class="mu">${t}</div></div>`;
-  return `<h3>📊 Dashboard</h3><div class="st">${c("Total Users",d.users)}${c("Active (7 din)",d.active7)}${c("Banned",d.banned)}${c("Blacklisted",d.blacklisted)}${c("Tournaments",d.matches)}${c("Tournament Entries",d.entries)}${c("Total Deposits 🪙",d.dep_total)}${c("Total Withdrawals 🪙",d.wd_total)}${c("Wallet Balance 🪙",d.wallet_total)}${c("Pending Deposits",d.dep_pending)}${c("Pending Withdraws",d.wd_pending)}${c("Notifications",d.notifs)}</div>`;
+  const d=aDash||{};
+  const users=UL||[];
+  const total=users.length;
+  const banned=users.filter(u=>u.banned).length;
+  const blacklisted=users.filter(u=>u.blacklisted).length;
+  const wallet=users.reduce((sum,u)=>sum+(Number(u.coins)||0),0);
+  const active7=Number(d.active7)||0;
+  const matches=Array.isArray(M)?M.length:(Number(d.matches)||0);
+  const entries=Object.values(JC||{}).reduce((sum,n)=>sum+(Number(n)||0),0);
+  const coinReq=typeof gp==='function'?gp().filter(x=>x.s==='pending').length:(Number(d.dep_pending)||0);
+  const withdrawReq=typeof gw==='function'?gw().filter(x=>x.s==='pending').length:(Number(d.wd_pending)||0);
+  const c=(label,value,emoji)=>`<div class="card" style="margin:0;min-width:0"><div style="font-size:20px;font-weight:900">${emoji||''} ${Number(value||0).toLocaleString('en-IN')}</div><div class="mu" style="font-size:11px;margin-top:4px">${label}</div></div>`;
+  return `<div class="card" style="border:1px solid var(--gd)"><h3 style="margin:0 0 12px">📊 FIRE X ADMIN DASHBOARD</h3><div class="mu" style="margin-bottom:12px">Live overview · Admin controls</div>
+  <div class="st" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${c('TOTAL USERS',d.users??total,'👥')}${c('BANNED USERS',d.banned??banned,'🚫')}${c('BLACKLISTED',d.blacklisted??blacklisted,'⛔')}${c('WALLET COINS',d.wallet_total??wallet,'🪙')}${c('ACTIVE (7 DAYS)',d.active7??active7,'🟢')}${c('MATCHES',d.matches??matches,'🎮')}${c('MATCH ENTRIES',d.entries??entries,'👤')}${c('PENDING DEPOSITS',d.dep_pending??coinReq,'📥')}${c('PENDING WITHDRAWALS',d.wd_pending??withdrawReq,'📤')}</div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="loadUsers().then(()=>R())">🔄 REFRESH DASHBOARD</button><button class="btn" onclick="document.querySelector('#ulist')?.scrollIntoView({behavior:'smooth'})">👥 USER CONTROL</button></div></div>`;
 }
 async function subscribePush(){
   try{

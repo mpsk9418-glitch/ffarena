@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "TOURNAMENT",
-  "short_name": "TOURNAMENT",
-  "description": "TOURNAMENT custom room tournaments",
+  "name": "FIRE X",
+  "short_name": "FIRE X",
+  "description": "FIRE X custom room tournaments",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

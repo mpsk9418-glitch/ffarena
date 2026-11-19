@@ -296,7 +296,7 @@ function admin(){
   const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b><div class="mu" style="margin:4px 0 8px">Approve se pehle bank statement me ye UTR aur amount check karo.</div>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc(p.n||(UU[p.u]||{}).n||p.u)}<br><span class="mu">📞 ${esc(p.mob||"nahi mila")}</span><br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=TOURNAMENT%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return roomModal()+dashCard()+usersCard()+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return roomModal()+dashCard()+usersCard()+`<div class="card"><b>📢 Notice / Warning bhejo</b><div class="mu" style="margin:6px 0">Sab users ko message bhejega.</div><textarea id="adminNotice" class="ci" rows="3" placeholder="Notice ya warning likho"></textarea><button class="btn w100" onclick="sendAdminNotice()">SEND NOTICE TO ALL</button></div><div class="card"><b>📣 Telegram Channel</b><div class="mu" style="margin:6px 0">Channel promotion / link</div><a class="btn w100" href="${TG}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">OPEN TELEGRAM CHANNEL</a></div>`+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
   <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
@@ -317,6 +317,7 @@ async function loadUsers(){
   let {data,error}=await sb.rpc("admin_list_users2");
   if(error){const r=await sb.rpc("admin_list_users");data=r.data}
   UL=data||[];
+  try{const {data:rr}=await sb.from("profiles").select("id,rank");const RM={};(rr||[]).forEach(x=>RM[x.id]=x.rank);UL=UL.map(x=>({...x,rank:RM[x.id]||null}));}catch(e){}
   try{const {data:jj}=await sb.from("match_joins").select("user_id");JC={};(jj||[]).forEach(r=>{JC[r.user_id]=(JC[r.user_id]||0)+1})}catch(e){JC={}}
   try{const d=await sb.rpc("admin_dashboard");aDash=d.data||null}catch(e){aDash=null}
 }
@@ -359,11 +360,29 @@ function userList(){
     const fl=(u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':'');
     return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username)}</b>${fl}<br><span class="mu">${esc(u.name||"")} · +91 ${esc(u.mobile)}</span><br><span class="mu">🪙 <b>${u.coins}</b> coins · 🎮 <b>${JC[u.id]||0}</b> match</span><br><span class="mu" style="font-size:10px;user-select:all;word-break:break-all">UID: ${esc(String(u.id))}</span></span>
     <span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-    <button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button>
+    <button class="btn" style="padding:6px 10px" onclick="setUserRank('${u.id}',${u.rank||0})">RANK ${u.rank||'—'}</button><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button>
     <button class="btn" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button>
     <button class="btn" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button></span></div>`}).join("");
+}
+async function setUserRank(id,current){
+  const val=prompt("User ko rank number do (1, 2, 3...). Blank = remove rank",current||"");
+  if(val===null)return;
+  const rank=val.trim()===""?null:Number(val);
+  if(rank!==null&&(!Number.isInteger(rank)||rank<1)){alert("Rank 1 ya usse bada integer hona chahiye");return}
+  const {error}=await sb.rpc("admin_set_user_rank",{p_user:id,p_rank:rank});
+  if(error){alert(error.message);return}
+  await loadUsers();R();
+}
+async function sendAdminNotice(){
+  const message=$("adminNotice").value.trim();
+  if(!message){alert("Notice likho");return}
+  if(!confirm("Ye notice sab users ko bhejna hai?"))return;
+  const {data,error}=await sb.rpc("admin_send_notice_all",{p_message:message});
+  if(error){alert(error.message);return}
+  alert("Notice bhej diya. Total: "+(data||0));$("adminNotice").value="";
+  await loadUsers();R();
 }
 async function setBan(id,b,l,why){
   const {error}=await sb.rpc("admin_set_ban",{p_user:id,p_banned:b,p_blacklisted:l,p_reason:why||""});

@@ -311,12 +311,13 @@ function promoGen(){
   <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
   ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.u}/${x.m} use</span><button class="btn" style="padding:6px 10px" onclick="delPromo('${esc(x.c)}')">DELETE</button></div>`).join(""):""}</div>`;
 }
-let UL=[],UH=null,aDash=null,aQ="",aAct=[];
+let UL=[],UH=null,aDash=null,aQ="",aAct=[],JC={};
 async function loadUsers(){
   if(!ADM){UL=[];return}
   let {data,error}=await sb.rpc("admin_list_users2");
   if(error){const r=await sb.rpc("admin_list_users");data=r.data}
   UL=data||[];
+  try{const {data:jj}=await sb.from("match_joins").select("user_id");JC={};(jj||[]).forEach(r=>{JC[r.user_id]=(JC[r.user_id]||0)+1})}catch(e){JC={}}
   try{const d=await sb.rpc("admin_dashboard");aDash=d.data||null}catch(e){aDash=null}
 }
 async function openHist(id){
@@ -356,7 +357,7 @@ function userList(){
   if(!L.length)return '<div class="mu">Koi user nahi mila</div>';
   return L.map(u=>{
     const fl=(u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':'');
-    return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username)}</b>${fl}<br><span class="mu">${esc(u.name||"")} · +91 ${esc(u.mobile)} · 🪙${u.coins}</span><br><span class="mu">ID: ${esc(String(u.id).slice(0,8))}</span></span>
+    return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username)}</b>${fl}<br><span class="mu">${esc(u.name||"")} · +91 ${esc(u.mobile)}</span><br><span class="mu">🪙 <b>${u.coins}</b> coins · 🎮 <b>${JC[u.id]||0}</b> match</span><br><span class="mu" style="font-size:10px;user-select:all;word-break:break-all">UID: ${esc(String(u.id))}</span></span>
     <span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
     <button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}')">HISTORY</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button>

@@ -346,7 +346,7 @@ function admin(){
   const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b><div class="mu" style="margin:4px 0 8px">Approve se pehle bank statement me ye UTR aur amount check karo.</div>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc(p.n||(UU[p.u]||{}).n||p.u)}<br><span class="mu">📞 ${esc(p.mob||"nahi mila")}</span><br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=TOURNAMENT%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return roomModal()+dashCard()+settingsCard()+modeNamesCard()+usersCard()+`<div class="card"><b>📢 Notice / Warning bhejo</b><div class="mu" style="margin:6px 0">Sab users ko message bhejega.</div><textarea id="adminNotice" class="ci" rows="3" placeholder="Notice ya warning likho"></textarea><button class="btn w100" onclick="sendAdminNotice()">SEND NOTICE TO ALL</button></div><div class="card"><b>📣 Telegram Channel</b><div class="mu" style="margin:6px 0">Channel promotion / link</div><a class="btn w100" href="${TG}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">OPEN TELEGRAM CHANNEL</a></div>`+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',MODES.map(k=>[k,mn(k)]))}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return roomModal()+dashCard()+settingsCard()+modeNamesCard()+passCard()+usersCard()+`<div class="card"><b>📢 Notice / Warning bhejo</b><div class="mu" style="margin:6px 0">Sab users ko message bhejega.</div><textarea id="adminNotice" class="ci" rows="3" placeholder="Notice ya warning likho"></textarea><button class="btn w100" onclick="sendAdminNotice()">SEND NOTICE TO ALL</button></div><div class="card"><b>📣 Telegram Channel</b><div class="mu" style="margin:6px 0">Channel promotion / link</div><a class="btn w100" href="${TG}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">OPEN TELEGRAM CHANNEL</a></div>`+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',MODES.map(k=>[k,mn(k)]))}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
   <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(mn(m.mo))}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
@@ -415,7 +415,7 @@ function profList(){
   const q=aQ.trim().toLowerCase();
   const L=UL.filter(u=>!q||[u.username,u.name,u.mobile,FFM[u.id]].some(x=>String(x||"").toLowerCase().includes(q)));
   if(!L.length)return '<div class="mu">Koi user nahi mila'+(USERR?'<br>Error: '+esc(USERR)+'<br>admin_setup.sql run karo.':'')+'</div>';
-  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button><button class="btn ${u.blacklisted?'off':''}" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button></span></div>`).join("");
+  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button><button class="btn ${u.blacklisted?'off':''}" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button><button class="btn" style="padding:6px 10px" onclick="resetPass('${u.id}')">🔑 PASSWORD</button><button class="btn off" style="padding:6px 10px" onclick="delUser('${u.id}')">🗑️ DELETE</button></span></div>`).join("");
 }
 function profUsers(){
   return `<h3>👥 Sab Users (${UL.length})</h3><button class="btn w100" style="margin-bottom:8px" onclick="loadUsers().then(()=>R())">🔄 REFRESH</button><div class="card"><input class="ci" placeholder="Naam, username ya game ID search karo" value="${esc(aQ)}" oninput="aQ=this.value;$('plist').innerHTML=profList()"><div id="plist">${profList()}</div></div>`;
@@ -432,7 +432,7 @@ function userList(){
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button>
     <button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button>
     <button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN ID':'BAN ID'}</button>
-    <button class="btn" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button></span></div>`}).join("");
+    <button class="btn" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button><button class="btn" style="padding:6px 10px" onclick="resetPass('${u.id}')">🔑 PASSWORD</button><button class="btn off" style="padding:6px 10px" onclick="delUser('${u.id}')">🗑️ DELETE</button></span></div>`}).join("");
 }
 async function setUserRank(id,current){
   const val=prompt("User ko rank number do (1, 2, 3...). Blank = remove rank",current||"");
@@ -916,7 +916,13 @@ async function loadMe(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ME="";PROF={};ADM=false;WAL=0;return}
   ME=session.user.id;
-  const {data:p}=await sb.from("profiles").select("name,username,mobile,is_admin,banned,blacklisted,ban_reason").eq("id",ME).maybeSingle();
+  const {data:p,error:pErr}=await sb.from("profiles").select("name,username,mobile,is_admin,banned,blacklisted,ban_reason").eq("id",ME).maybeSingle();
+  if(!p&&!pErr){
+    try{await sb.auth.signOut()}catch(e){}
+    ME="";PROF={};ADM=false;WAL=0;
+    alert("Ye account delete ho chuka hai. Naya account banao ya support se baat karo.");
+    return;
+  }
   if(p&&(p.banned||p.blacklisted)&&!p.is_admin){
     const why=p.ban_reason?"\nReason: "+p.ban_reason:"";
     try{await sb.auth.signOut()}catch(e){}
@@ -1035,7 +1041,7 @@ async function doLogin(){
   if(e1||!email){alert("Username ya mobile number galat hai");return}
   const {error}=await sb.auth.signInWithPassword({email,password:p});
   if(error){alert("Password galat hai");return}
-  await loadMe();AV={};R();
+  await loadMe();AV={};R();licRender();
 }
 async function doSign(){
   const n=$("an").value.trim(),un=$("au").value.trim(),m=$("am").value.trim(),p=$("ap").value;
@@ -1051,13 +1057,82 @@ async function doSign(){
   }
   const {error:e2}=await sb.auth.signInWithPassword({email,password:p});
   if(e2){alert("Account ban gaya. Ab login karo.");AM="login";AV={};R();return}
-  await loadMe();AV={};R();
+  await loadMe();AV={};R();licRender();
 }
 async function logout(){
   try{await sb.auth.signOut()}catch(e){}
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
 
+
+function passCard(){
+  return `<div class="card"><b>🔑 Password Reset (Username se)</b><div class="mu" style="margin:6px 0">Jo user password bhool gaya, uska username likho aur naya password do. Phir wo isi naye password se login karega.</div>
+  <input class="ci" id="rpu" placeholder="User ka username (jaise SI12312)" autocapitalize="off"><input class="ci" id="rpp" placeholder="Naya password (min 6 akshar)" style="margin-top:8px"><button class="btn w100" style="margin-top:8px" onclick="resetPassByName()">PASSWORD RESET KARO</button></div>`;
+}
+async function doReset(u,p){
+  if(p.length<6){alert("Password kam se kam 6 akshar ka ho");return}
+  if(!confirm("@"+(u.username||"")+" ("+(u.name||"")+") ka password '"+p+"' kar dein?"))return;
+  const {error}=await sb.rpc("admin_reset_password",{p_user:u.id,p_password:p});
+  if(error){alert("Password reset nahi hua: "+error.message+(/function|schema cache|does not exist|permission|denied/i.test(error.message)?"\n\nPehle admin_user_manage.sql Supabase SQL Editor me run karo.":""));return}
+  alert("Done ✅ @"+(u.username||"")+" ka naya password: "+p+"\nYe user ko bata do. Wo isi se login karega.");
+}
+async function resetPass(id){
+  const u=UL.find(x=>String(x.id)==String(id));if(!u)return;
+  const p=prompt("@"+(u.username||"")+" ka NAYA password likho (kam se kam 6 akshar):");
+  if(p===null)return;
+  await doReset(u,p.trim());
+}
+async function resetPassByName(){
+  const q=($("rpu").value||"").trim().toLowerCase(),p=($("rpp").value||"").trim();
+  if(!q||!p){alert("Username aur naya password dono bharo");return}
+  const u=UL.find(x=>String(x.username||"").toLowerCase()==q);
+  if(!u){alert("Ye username nahi mila. Spelling check karo (REFRESH karke dekho).");return}
+  await doReset(u,p);
+  if($("rpp"))$("rpp").value="";
+}
+async function delUser(id){
+  const u=UL.find(x=>String(x.id)==String(id));if(!u)return;
+  const nm="@"+(u.username||"")+" ("+(u.name||"")+")";
+  if(!confirm("⚠️ "+nm+" ka account POORA DELETE karna hai?\n\nIska wallet (🪙"+(Number(u.coins)||0)+"), match joins aur sab record hamesha ke liye mit jayenge. Wapas nahi aayega."))return;
+  const t=prompt("Pakka karne ke liye DELETE likho:");
+  if(t===null||t.trim().toUpperCase()!=="DELETE"){alert("Delete cancel ho gaya");return}
+  const {error}=await sb.rpc("admin_delete_user",{p_user:id});
+  if(error){alert("Delete nahi hua: "+error.message+(/function|schema cache|does not exist|permission|denied/i.test(error.message)?"\n\nPehle admin_user_manage.sql Supabase SQL Editor me run karo.":""));return}
+  await loadUsers();R();
+  alert("Done ✅ "+nm+" ka account delete ho gaya. Ab ye username se login nahi hoga.");
+}
+
+let LIC=null;
+async function checkLicense(){
+  try{
+    const {data,error}=await sb.rpc("get_license");
+    if(error)return;
+    const d=data?new Date(data):null;
+    LIC=(d&&!isNaN(d))?d:null;
+  }catch(e){return}
+  licRender();
+}
+function licAdminLogin(){window._licHide=true;licRender()}
+async function licRecheck(){await checkLicense();if(LIC&&LIC<=new Date())toast("Abhi bhi lock hai. Payment ke baad support se unlock karwao.")}
+function licRender(){
+  let el=$("lic");
+  const exp=!!(LIC&&LIC<=new Date());
+  if(!exp){window._licHide=false;if(el)el.remove();return}
+  if(!ME&&window._licHide){if(el)el.remove();return}
+  if(ME&&!ADM){window._licHide=false;logout()}
+  const adm=!!(ME&&ADM);
+  if(!el){
+    el=document.createElement("div");el.id="lic";
+    el.style.cssText="position:fixed;inset:0;z-index:99998;background:#0a0d16;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:sans-serif;overflow:auto";
+    document.body.appendChild(el);
+  }
+  const tm=LIC.toLocaleString("en-IN");
+  el.innerHTML=adm
+    ?`<div style="max-width:420px"><div style="font-size:48px">⚠️</div><h2 style="margin:12px 0 8px;color:#ff6b6b">YOUR DOMAIN LIVE STREAM IS OVER</h2><p style="opacity:.9;line-height:1.6">Tumhare domain ka time khatam ho gaya hai.<br><span style="opacity:.7;font-size:13px">Expiry: ${esc(tm)}</span></p><p style="opacity:.9;line-height:1.6;margin-top:14px">Naya domain kharidne ke liye is number par contact karo:</p><a href="https://wa.me/919874209398" target="_blank" rel="noopener" style="display:block;margin:12px 0;padding:14px;border-radius:10px;background:#25d366;color:#fff;font-weight:800;text-decoration:none;font-size:18px">📞 +91 98742 09398</a><button onclick="licRecheck()" style="padding:12px 22px;border-radius:8px;border:0;background:#ffd24a;font-weight:800;margin-right:8px">REFRESH</button><button onclick="logout().then(licRender)" style="padding:12px 22px;border-radius:8px;border:1px solid #888;background:none;color:#fff;font-weight:800">LOGOUT</button></div>`
+    :`<div><div style="font-size:48px">🛠️</div><h2 style="margin:12px 0 8px">APP UNDER MAINTENANCE</h2><p style="opacity:.85;line-height:1.6">Ye app abhi update ho raha hai. Thodi der baad phir se kholein.</p><p style="margin-top:40px"><a onclick="licAdminLogin()" style="opacity:.3;font-size:11px;cursor:pointer;text-decoration:underline">Admin login</a></p></div>`;
+}
+setInterval(checkLicense,30000);
+addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkLicense()});
 function toast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#1a2036;color:var(--gd);border:1px solid var(--gd);border-radius:8px;padding:10px 16px;font-weight:800;z-index:100000;box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:90%;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),4500)}
 function paintWallet(){
   const c=$("coin");if(c)c.textContent="🪙 "+bal();
@@ -1135,7 +1210,7 @@ async function resetModeNames(){
 }
 setInterval(async()=>{if(await loadModeNames()&&["home","list","det","mine"].includes(view))R()},30000);
 
-(async()=>{await checkMaint();await loadSettings();await loadModeNames();try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
+(async()=>{await checkMaint();await loadSettings();await loadModeNames();await checkLicense();try{await loadMe()}catch(e){}licRender();NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
 setInterval(checkMaint,60000);
 setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();osNotify(NT);if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));

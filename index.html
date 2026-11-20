@@ -178,6 +178,9 @@ const M=[
 const DM=M.slice();
 
 const saveM=()=>{try{localStorage.setItem('ffam2',JSON.stringify(M))}catch(e){}};
+const MODES=["Free Mode","Solo","Duo","Squad","Clash Squad","Headshot","Lone Wolf","1v1"];
+let MN={};try{MN=JSON.parse(localStorage.getItem("ffamn")||"{}")||{}}catch(e){MN={}}
+const mn=k=>(MN&&typeof MN[k]=="string"&&MN[k])?MN[k]:k;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let ADM=false;try{ADM=localStorage.getItem('ffaadm')=='1'}catch(e){}
 let J={},view="home",sel=0,tab="active",mode="Solo",ID="";
@@ -254,7 +257,7 @@ const RULES=[
 const jl=m=>m.fee>0?"JOIN · 🪙"+m.fee:"JOIN FREE";
 function card(m){
   const p=Math.round(m.j/m.x*100),jn=J[m.id];
-  return `<div class="card"><div class="row sp"><div class="row"><div class="ic">🎮</div><div><b>#${m.id} BR Match</b><div class="mu">${m.mo} : ${m.mp}</div></div></div><div class="tag">${m.d}<br><b>${m.tm}</b></div></div>
+  return `<div class="card"><div class="row sp"><div class="row"><div class="ic">🎮</div><div><b>#${m.id} BR Match</b><div class="mu">${esc(mn(m.mo))} : ${m.mp}</div></div></div><div class="tag">${m.d}<br><b>${m.tm}</b></div></div>
   <div class="tg"><span>⭐ Level 50+</span>${m.mo=="Free Mode"?'<span>🆓 FREE · Sunday</span>':""}<span>🎯 ${m.ru}</span><span>🔫 ${m.gn}</span></div><div class="row sp"><div><div class="mu">TOTAL REWARD</div><div class="big">₹${m.r}</div></div><button class="pill" onclick="det(${m.id})">View Details ›</button></div>
   <div class="row"><div class="mu">${m.j}/${m.x} Joined</div><div class="bar"><i style="width:${p}%"></i></div><button class="btn ${jn?"off":""}" onclick="join(${m.id})">${jn?"JOINED ✓":jl(m)}</button></div></div>`;
 }
@@ -286,17 +289,17 @@ const slides=()=>`<div class="st2" id="st2" style="transform:translateX(-${si*10
   <div class="sd"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDgwIDYxMyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMmEwYTEyIi8+PHN0b3Agb2Zmc2V0PSIuNjIiIHN0b3AtY29sb3I9IiNjOTNhMTIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmIyMWEiLz48L2xpbmVhckdyYWRpZW50PjxyYWRpYWxHcmFkaWVudCBpZD0iYyIgY3g9Ii4zNSIgY3k9Ii4zNSIgcj0iLjciPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiMCIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmIyMWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODczMDAiLz48L3JhZGlhbEdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTA4MCIgaGVpZ2h0PSI2MTMiIGZpbGw9InVybCgjZykiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5MCwxNTApIj48dGV4dCB4PSIwIiB5PSIwIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9IjcwMCIgbGV0dGVyLXNwYWNpbmc9IjYiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9Ii44NSI+Q09JTlMgV0FMTEVUPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTYiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtc3R5bGU9Iml0YWxpYyIgZmlsbD0iI2ZmZmZmZiI+Q09JTlMgQUREIEtBUk88L3RleHQ+PHRleHQgeD0iMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3MiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjZmZkMTY2Ij5FTlRSWSBNRSBKT0lOPC90ZXh0Pjx0ZXh0IHg9IjAiIHk9IjI2MCIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9Ii45Ij5VcGFyIGNvaW4gYnV0dG9uIGRhYmFvIGF1ciBjb2lucyBhZGQga2FybzwvdGV4dD48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoODMwLDMwMCkiPjxjaXJjbGUgcj0iMTUwIiBmaWxsPSJ1cmwoI2MpIiBzdHJva2U9IiNmZmYzYjAiIHN0cm9rZS13aWR0aD0iMTAiLz48Y2lyY2xlIHI9IjExOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjg3MzAwIiBzdHJva2Utd2lkdGg9IjYiIG9wYWNpdHk9Ii42Ii8+PHRleHQgeD0iMCIgeT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iIzdhNGEwMCI+QzwvdGV4dD48L2c+PC9zdmc+" alt="Coins add karo" style="width:100%;height:100%;object-fit:cover;display:block"></div></div>
   <div class="dt" id="dt">`+Array.from({length:SN},(_,i)=>`<i class="${i==si?"on":""}"></i>`).join("")+`</div>`;
 function home(){
-  const G=[["Free Mode","x"],["Solo","x"],["Duo","x"],["Squad","x"],["Clash Squad","x"],["Headshot","x"],["Lone Wolf","x"],["1v1","x"]];
+  const G=MODES.map(k=>[k,"x"]);
   return notifHtml()+(DP&&!standalone()?`<div class="inst"><span>📲 ${APPN} ko app ki tarah install karo</span><button class="btn" onclick="instApp()">INSTALL</button></div>`:"")+(ADM&&pc()?`<div class="nt" onclick="go('adm')">🔔 ${pc()} nayi request pending hai. Dekhne ke liye tap karo.</div>`:"")+`<div class="ann"><i>📢</i><span>Galat Character ID dene par account suspend ho sakta hai</span></div>
   <div class="sl" id="sl" ontouchstart="sh=1;sx=event.touches[0].clientX" ontouchend="sh=0;{const d=event.changedTouches[0].clientX-sx;if(Math.abs(d)>40)slide(si+(d<0?1:-1))}">${slides()}</div>
-  <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${g[0]}</b></button>`).join("")+`</div>`;
+  <h3>Contests &amp; tournaments</h3><div class="gm">`+G.map((g,i)=>`<button onclick="pick('${g[0]}')"><div class="im" style="background:linear-gradient(160deg,hsl(${200+i*28},75%,48%),hsl(${240+i*28},70%,30%))"><img src="${LOGO}" alt="" style="width:64px;height:64px;border-radius:14px"></div><b>${esc(mn(g[0]))}</b></button>`).join("")+`</div>`;
 }
 function pick(m){if(m=="eSports"||m=="Fantasy"){alert(m+" jaldi aa raha hai!");return}mode=m;mf="All";go("list")}
 let mf="All";
 function list(){
   const L=M.filter(m=>m.mo==mode&&(mf=="All"||m.mp==mf));
   const MP=["All","Bermuda","Kalahari","Purgatory"];
-  return `<div class="row" style="margin-bottom:10px"><button class="back" onclick="go('home')">←</button><b>${mode} Matches</b></div>
+  return `<div class="row" style="margin-bottom:10px"><button class="back" onclick="go('home')">←</button><b>${esc(mn(mode))} Matches</b></div>
   <div class="chips">`+MP.map(x=>`<button class="${mf==x?"on":""}" onclick="mf='${x}';R()">${x}</button>`).join("")+`</div>`+(L.length?L.map(m=>card(m)+`<button class="btn w100" style="margin:-6px 0 12px" onclick="openDet(${m.id})">DETAILS</button>`).join("")+detModal():`<div class="card mu">Is map ya mode me abhi koi match nahi hai.</div>`);
 }
 function pro(){
@@ -325,7 +328,7 @@ function lb(){
 function detail(){
   const m=M.find(x=>x.id==sel);if(!m){view='home';return home()}const jn=J[m.id];
   return `<div class="row" style="margin-bottom:10px"><button class="back" onclick="go('list')">←</button><b>#${m.id} BR Match Details</b></div>
-  <div class="card"><div class="g4"><div>🎮<b>BR</b>Type</div><div>👤<b>${m.mo}</b>Mode</div><div>🗺️<b>${m.mp}</b>Map</div><div>💲<b>${m.fee>0?"🪙"+m.fee:"FREE"}</b>Entry</div></div></div>
+  <div class="card"><div class="g4"><div>🎮<b>BR</b>Type</div><div>👤<b>${esc(mn(m.mo))}</b>Mode</div><div>🗺️<b>${m.mp}</b>Map</div><div>💲<b>${m.fee>0?"🪙"+m.fee:"FREE"}</b>Entry</div></div></div>
   <div class="card rl"><b>📜 Rules · har custom me same</b><ol>${RULES.map(r=>`<li>${esc(r)}</li>`).join("")}</ol></div>
   <div class="card"><b>Match Rules</b><div class="li"><span>🗺️ Map</span><b>${m.mp}</b></div><div class="li"><span>🎯 Headshot</span><b>${m.ru}</b></div><div class="li"><span>🔫 Guns</span><b>${m.gn}</b></div></div>
   <div class="card" style="text-align:center">${roomCard(m)}<div class="mu">Total BR Reward</div><div class="big">₹${m.r}</div></div>
@@ -337,15 +340,15 @@ function detail(){
 
 function admin(){
   const inp=(id,ph,t,v)=>`<input id="${id}" type="${t||'text'}" placeholder="${ph}" value="${v||''}" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px">`;
-  const sel=(id,o)=>`<select id="${id}" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px">${o.map(x=>`<option>${x}</option>`).join('')}</select>`;
+  const sel=(id,o)=>`<select id="${id}" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px">${o.map(x=>Array.isArray(x)?`<option value="${esc(x[0])}">${esc(x[1])}</option>`:`<option>${x}</option>`).join('')}</select>`;
   const CR=gp().filter(p=>p.s=="pending"),UU=gu();
   const crs=`<div class="card"><b>🪙 Coin Requests (${CR.length})</b><div class="mu" style="margin:4px 0 8px">Approve se pehle bank statement me ye UTR aur amount check karo.</div>`+(CR.length?CR.map(p=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span>₹${p.amt} · ${esc(p.n||(UU[p.u]||{}).n||p.u)}<br><span class="mu">📞 ${esc(p.mob||"nahi mila")}</span><br><span class="mu">UTR ${esc(p.utr)}</span></span><span><button class="btn" style="padding:7px 12px" onclick="setC(${p.id},'ok')">APPROVE</button> <button class="btn off" style="padding:7px 12px" onclick="setC(${p.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending request nahi hai.</div>`)+`</div>`;
   const WR=gw().filter(w=>w.s=="pending");
   const wrs=`<div class="card"><b>💸 Withdraw Requests (${WR.length})</b>`+(WR.length?WR.map(w=>`<div class="li" style="flex-wrap:wrap;gap:8px"><span><b>🪙${w.amt} = ₹${w.amt}</b> · ${esc(w.n)}<br>UPI: <b>${esc(w.upi)}</b><br><a href="tel:+91${esc(w.mob)}" style="color:var(--gd)">📞 +91 ${esc(w.mob)}</a><br><span class="mu" style="color:#ffcf6b">🎥 PAY se pehle screen recording check karo</span></span><span><a class="btn" style="text-decoration:none;display:inline-block;padding:7px 12px" href="upi://pay?pa=${encodeURIComponent(w.upi)}&pn=${encodeURIComponent(w.n)}&am=${w.amt}&cu=INR&tn=TOURNAMENT%20Withdraw">PAY NOW</a> <button class="btn" style="padding:7px 12px" onclick="setW(${w.id},'paid')">PAID</button> <button class="btn off" style="padding:7px 12px" onclick="setW(${w.id},'rej')">REJECT</button></span></div>`).join(""):`<div class="mu" style="margin-top:6px">Koi pending withdraw nahi hai.</div>`)+`</div>`;
-  return roomModal()+dashCard()+settingsCard()+usersCard()+`<div class="card"><b>📢 Notice / Warning bhejo</b><div class="mu" style="margin:6px 0">Sab users ko message bhejega.</div><textarea id="adminNotice" class="ci" rows="3" placeholder="Notice ya warning likho"></textarea><button class="btn w100" onclick="sendAdminNotice()">SEND NOTICE TO ALL</button></div><div class="card"><b>📣 Telegram Channel</b><div class="mu" style="margin:6px 0">Channel promotion / link</div><a class="btn w100" href="${TG}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">OPEN TELEGRAM CHANNEL</a></div>`+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',['Free Mode','Solo','Duo','Squad','Clash Squad','Headshot','Lone Wolf','1v1'])}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
+  return roomModal()+dashCard()+settingsCard()+modeNamesCard()+usersCard()+`<div class="card"><b>📢 Notice / Warning bhejo</b><div class="mu" style="margin:6px 0">Sab users ko message bhejega.</div><textarea id="adminNotice" class="ci" rows="3" placeholder="Notice ya warning likho"></textarea><button class="btn w100" onclick="sendAdminNotice()">SEND NOTICE TO ALL</button></div><div class="card"><b>📣 Telegram Channel</b><div class="mu" style="margin:6px 0">Channel promotion / link</div><a class="btn w100" href="${TG}" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">OPEN TELEGRAM CHANNEL</a></div>`+promoGen()+wrs+crs+`<div class="card"><b>➕ Match Add Karo</b><div class="mu" style="margin:6px 0">Mode</div>${sel('xm',MODES.map(k=>[k,mn(k)]))}<div class="mu">Map</div>${sel('xp',['Bermuda','Kalahari','Purgatory'])}
   ${inp('xr','Rules (Normal / Headshot Only)','text','Normal')}${inp('xg','Guns (All Guns, AR + SMG...)','text','All Guns')}${inp('xd','Date (e.g. TOMORROW, 20/10)','text','TOMORROW')}${inp('xt','Time (e.g. 8:00 PM)','text','8:00 PM')}${inp('xw','Total reward ₹','number')}${inp('xx','Max players','number')}${inp('xf','Entry fee in coins (0 = free)','number')}
   <button class="btn w100" onclick="addMatch()">ADD MATCH</button></div>
-  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(m.mo)}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
+  <h3>Sare Matches (${M.length})</h3>`+(M.length?M.map(m=>`<div class="card"><div class="row sp"><div><b>#${m.id} ${esc(mn(m.mo))}</b><div class="mu">${esc(m.mp)} · ${esc(m.d)} ${esc(m.tm)} · ₹${m.r} · ${m.j}/${m.x} · fee 🪙${m.fee||0}</div></div><span><button class="btn" onclick="setStatus(${m.id})">STATUS</button> <button class="btn" onclick="setRoom(${m.id})">ROOM</button> <button class="btn" onclick="setFee(${m.id})">FEE</button> <button class="btn" onclick="delMatch(${m.id})">REMOVE</button></span></div></div>`).join(''):`<div class="card mu">Koi match nahi hai.</div>`)+`<button class="btn off w100" onclick="resetM()">Default matches wapas lao</button>`;
 }
 
 function promoGen(){
@@ -384,7 +387,7 @@ function usersCard(){
   if(UH){
     const h=UH,pr=h.profile||{},M=h.matches||[];
     const played=M.filter(m=>m.status=="finished").length,live=M.filter(m=>m.status=="live").length,pend=M.filter(m=>m.status!="finished"&&m.status!="live").length;
-    const MS=M.map(m=>`<div class="li"><span>#${m.match} · ${esc(m.mode)} · ${esc(m.date)} ${esc(m.time)} · FF: ${esc(m.ff)} · <b>${esc(m.status)}</b></span></div>`).join("")||'<div class="mu">Koi match join nahi</div>';
+    const MS=M.map(m=>`<div class="li"><span>#${m.match} · ${esc(mn(m.mode))} · ${esc(m.date)} ${esc(m.time)} · FF: ${esc(m.ff)} · <b>${esc(m.status)}</b></span></div>`).join("")||'<div class="mu">Koi match join nahi</div>';
     const P=(h.payments||[]).map(p=>`<div class="li"><span>🪙${p.amount} · UTR ${esc(p.utr)} · ${esc(p.status)}</span></div>`).join("")||'<div class="mu">Koi coin request nahi</div>';
     const W=(h.withdrawals||[]).map(w=>`<div class="li"><span>🪙${w.amount} · ${esc(w.upi)} · ${esc(w.status)}</span></div>`).join("")||'<div class="mu">Koi withdraw nahi</div>';
     const C=(h.promos||[]).map(c=>`<div class="li"><span>${esc(c.code)} · 🪙${c.coins}</span></div>`).join("")||'<div class="mu">Koi promo use nahi</div>';
@@ -411,7 +414,7 @@ function profList(){
   const q=aQ.trim().toLowerCase();
   const L=UL.filter(u=>!q||[u.username,u.name,u.mobile,FFM[u.id]].some(x=>String(x||"").toLowerCase().includes(q)));
   if(!L.length)return '<div class="mu">Koi user nahi mila'+(USERR?'<br>Error: '+esc(USERR)+'<br>admin_setup.sql run karo.':'')+'</div>';
-  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button><button class="btn ${u.blacklisted?'off':''}" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button></span></div>`).join("");
+  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',1)">+🪙</button><button class="btn" style="padding:6px 10px" onclick="walletAdj('${u.id}',-1)">−🪙</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button><button class="btn ${u.blacklisted?'off':''}" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button></span></div>`).join("");
 }
 function profUsers(){
   return `<h3>👥 Sab Users (${UL.length})</h3><button class="btn w100" style="margin-bottom:8px" onclick="loadUsers().then(()=>R())">🔄 REFRESH</button><div class="card"><input class="ci" placeholder="Naam, username ya game ID search karo" value="${esc(aQ)}" oninput="aQ=this.value;$('plist').innerHTML=profList()"><div id="plist">${profList()}</div></div>`;
@@ -463,13 +466,22 @@ async function blUser(id,l){
   else{if(!confirm("Is user ko blacklist se hatana hai? (Ban bhi hat jayega)"))return;await setBan(id,false,false,"")}
 }
 async function walletAdj(id,sign){
-  const a=parseInt(prompt(sign>0?"Kitne coins ADD karne hain?":"Kitne coins DEDUCT karne hain?"),10);
+  const u=UL.find(x=>String(x.id)==String(id))||{};
+  const cur=Number(u.coins)||0,who=u.name||u.username||"User";
+  const a=parseInt(prompt(who+" ka abhi wallet: 🪙"+cur+"\n\n"+(sign>0?"Kitne coins ADD karne hain?":"Kitne coins DEDUCT karne hain?")),10);
   if(!a||a<=0)return;
+  if(sign<0&&a>cur){alert(who+" ke wallet me sirf 🪙"+cur+" hain. Itne coins deduct nahi ho sakte.");return}
   const note=prompt("Note / reason (optional):")||"";
   const {data,error}=await sb.rpc("admin_adjust_wallet",{p_user:id,p_amt:sign*a,p_note:note});
-  if(error){alert(error.message);return}
-  alert("Done. User ka naya wallet: 🪙"+data);
-  await loadUsers();R();
+  if(error){alert("Wallet change nahi hua: "+error.message+(/function|schema cache|does not exist|permission|denied/i.test(error.message)?"\n\nSupabase me admin_setup.sql run karna padega.":""));return}
+  const nw=Number(data);
+  await loadUsers();
+  const chk=UL.find(x=>String(x.id)==String(id));
+  const real=chk?Number(chk.coins):null;
+  if(id==ME)await refreshWallet(true);
+  R();
+  if(real!==null&&!isNaN(nw)&&real!==nw){alert("⚠️ Dhyan do: function ne 🪙"+nw+" bataya par database me abhi 🪙"+real+" dikh raha hai. admin_adjust_wallet SQL function check karo.");return}
+  alert("Done ✅ "+who+": 🪙"+cur+" → 🪙"+(isNaN(nw)?real:nw)+"\nUser ke phone me kuch second me naya balance dikh jayega.");
 }
 function dashCard(){
   const d=aDash||{};
@@ -521,8 +533,10 @@ function startRealtime(){
   window._rtUser=ME;
   subscribePush();
   window._rt=sb.channel("n-"+ME).on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"user_id=eq."+ME},async()=>{
-    await loadNotif();osNotify(NT);await loadMatches();R();
+    await loadNotif();osNotify(NT);await loadMatches();await refreshWallet();R();
   }).subscribe();
+  if(window._rtw){try{sb.removeChannel(window._rtw)}catch(e){}}
+  window._rtw=sb.channel("w-"+ME).on("postgres_changes",{event:"*",schema:"public",table:"wallets",filter:"user_id=eq."+ME},()=>refreshWallet()).subscribe();
 }
 async function loadPromos(){
   if(!ADM){PRL=[];return}
@@ -605,7 +619,7 @@ function detModal(){
     }
     h+=`<div class="card"><b>Team ${t}</b> <span class="mu">${mem.length}/${sz}</span>${slots}</div>`;
   }
-  return `<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;overflow:auto;padding:16px"><div style="max-width:420px;margin:0 auto"><div class="card"><b>📋 ${esc(DTD.mode||"")} Details</b><div class="mu" style="margin:6px 0">Joined: ${P.length}/${DTD.max||0}</div><button class="btn w100" onclick="closeDet()">BAND KARO</button></div>${h}</div></div>`;
+  return `<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99;overflow:auto;padding:16px"><div style="max-width:420px;margin:0 auto"><div class="card"><b>📋 ${esc(mn(DTD.mode||""))} Details</b><div class="mu" style="margin:6px 0">Joined: ${P.length}/${DTD.max||0}</div><button class="btn w100" onclick="closeDet()">BAND KARO</button></div>${h}</div></div>`;
 }
 async function addMatch(){
   const v=i=>$(i).value.trim(),r=+v('xw'),x=+v('xx');
@@ -839,7 +853,7 @@ async function setC(id,s){
 }
 function R(){
   if(!ME){authR();return}
-  const t={home:APPN,list:mode,mine:"My Tournaments",lb:"Leaderboard",det:"Match Details",pro:"Profile",adm:"Admin Panel",coin:"Add Coins"};
+  const t={home:APPN,list:mn(mode),mine:"My Tournaments",lb:"Leaderboard",det:"Match Details",pro:"Profile",adm:"Admin Panel",coin:"Add Coins"};
   $("ttl").textContent=t[view];
   $("app").innerHTML=(view=="adm"&&!ADM?(view="home",home):{home,list,mine,lb,det:detail,pro,adm:admin,coin:coinV}[view])();
   const N=[["home","🎮","Play"],["mine","🏆","My Matches"],["lb","📊","Leaderboard"],["pro","😊","Profile"]];if(ADM)N.push(["adm","🛠️","Admin",pc()]);
@@ -1042,7 +1056,85 @@ async function logout(){
   try{await sb.auth.signOut()}catch(e){}
   ME="";PROF={};ADM=false;WAL=0;view="home";AM="login";AV={};R();
 }
-(async()=>{await checkMaint();await loadSettings();try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
+
+function toast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#1a2036;color:var(--gd);border:1px solid var(--gd);border-radius:8px;padding:10px 16px;font-weight:800;z-index:100000;box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:90%;text-align:center";document.body.appendChild(d);setTimeout(()=>d.remove(),4500)}
+function paintWallet(){
+  const c=$("coin");if(c)c.textContent="🪙 "+bal();
+  if(view=="coin"){const b=document.querySelector("#app .big");if(b)b.textContent="🪙 "+bal()}
+  else if(view=="mine")R();
+}
+async function refreshWallet(force){
+  if(!ME||window._wb)return;window._wb=1;
+  try{
+    const {data,error}=await sb.from("wallets").select("coins").eq("user_id",ME).maybeSingle();
+    if(!error&&data&&data.coins!=null&&(force===true||Number(data.coins)!==Number(WAL))){
+      const old=WAL;WAL=Number(data.coins);
+      await loadStats();
+      paintWallet();
+      if(force!==true&&old!==WAL)toast("🪙 Wallet update: "+old+" → "+WAL);
+    }
+  }catch(e){}
+  window._wb=0;
+}
+setInterval(()=>{if(document.visibilityState!=="hidden")refreshWallet()},8000);
+addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshWallet()});
+addEventListener("focus",()=>refreshWallet());
+
+async function fetchModeNames(){
+  let raw=null,ok=false;
+  try{const r=await sb.rpc("get_mode_names");if(!r.error){ok=true;raw=r.data}}catch(e){}
+  if(!ok){try{const r=await sb.from("app_settings").select("value").eq("key","mode_names").maybeSingle();if(!r.error){ok=true;raw=r.data?r.data.value:null}}catch(e){}}
+  if(!ok)return undefined;
+  if(!raw)return {};
+  try{
+    const o=typeof raw=="string"?JSON.parse(raw):raw,c={};
+    if(o&&typeof o=="object")MODES.forEach(k=>{if(typeof o[k]=="string"&&o[k].trim())c[k]=o[k].trim().slice(0,20)});
+    return c;
+  }catch(e){return {}}
+}
+async function loadModeNames(){
+  const o=await fetchModeNames();
+  if(o===undefined)return false;
+  const changed=JSON.stringify(MN)!==JSON.stringify(o);
+  MN=o;try{localStorage.setItem("ffamn",JSON.stringify(o))}catch(e){}
+  return changed;
+}
+function modeNamesCard(){
+  return `<div class="card"><b>🎮 Mode Names</b><div class="mu" style="margin:6px 0">Kisi bhi mode ka naam yahan se badlo (Free Mode, Solo, Duo, 1v1, Lone Wolf...). Save karte hi sab users ko naya naam dikhega. Naam khali chhodoge ya purana likhoge to default naam rahega.</div>`
+  +MODES.map((k,i)=>`<div class="mu" style="margin:6px 0 2px">${esc(k)}</div><input class="ci" id="mn${i}" maxlength="20" placeholder="${esc(k)}" value="${esc(mn(k))}">`).join("")
+  +`<button class="btn w100" style="margin-top:10px" onclick="saveModeNames()">MODE NAMES SAVE</button><button class="btn off w100" style="margin-top:8px" onclick="resetModeNames()">DEFAULT NAAM WAPAS</button></div>`;
+}
+async function pushModeNames(nm){
+  const js=JSON.stringify(nm);
+  let r=await sb.rpc("admin_set_mode_names",{p_value:js});
+  if(r.error)r=await sb.rpc("admin_set_setting",{p_key:"mode_names",p_value:js});
+  if(r.error){alert("Save nahi hua: "+r.error.message+"\\n\\nPehle mode_names_setup.sql Supabase SQL Editor me run karo.");return false}
+  const back=await fetchModeNames();
+  if(back===undefined||JSON.stringify(back)!==JSON.stringify(nm)){alert("⚠️ Save to hua par server se wapas padh nahi paaye, isliye dusre users ko shayad naya naam na dikhe. mode_names_setup.sql Supabase SQL Editor me run karo.")}
+  return true;
+}
+async function saveModeNames(){
+  const nm={};
+  for(let i=0;i<MODES.length;i++){
+    const e=$("mn"+i),v=((e&&e.value)||"").trim();
+    if(v.length>20){alert("Naam 20 akshar se chhota rakho");return}
+    if(v&&v!==MODES[i])nm[MODES[i]]=v;
+  }
+  const shown=MODES.map(k=>(nm[k]||k).toLowerCase());
+  if(new Set(shown).size!==shown.length){alert("Do modes ka naam same nahi ho sakta");return}
+  if(!(await pushModeNames(nm)))return;
+  MN=nm;try{localStorage.setItem("ffamn",JSON.stringify(nm))}catch(e){}
+  R();alert("Mode names save ho gaye ✅");
+}
+async function resetModeNames(){
+  if(!confirm("Sab mode ke naam default par wapas karne hain?"))return;
+  if(!(await pushModeNames({})))return;
+  MN={};try{localStorage.setItem("ffamn","{}")}catch(e){}
+  R();
+}
+setInterval(async()=>{if(await loadModeNames()&&["home","list","det","mine"].includes(view))R()},30000);
+
+(async()=>{await checkMaint();await loadSettings();await loadModeNames();try{await loadMe()}catch(e){}NT.forEach(n=>SEEN.add(n.id));if(ME)autoAsk();R()})();
 setInterval(checkMaint,60000);
 setInterval(async()=>{if(!ME)return;const b=NT.length;await loadNotif();osNotify(NT);if(NT.length!==b){await loadMatches();R()}},60000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));

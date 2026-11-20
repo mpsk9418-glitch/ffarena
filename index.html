@@ -357,11 +357,17 @@ function promoGen(){
   <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
   ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.u}/${x.m} use</span><button class="btn" style="padding:6px 10px" onclick="delPromo('${esc(x.c)}')">DELETE</button></div>`).join(""):""}</div>`;
 }
-let FFM={},UL=[],UH=null,aDash=null,aQ="",aAct=[],JC={};
+let USERR="",FFM={},UL=[],UH=null,aDash=null,aQ="",aAct=[],JC={};
 async function loadUsers(){
   if(!ADM){UL=[];return}
-  let {data,error}=await sb.rpc("admin_list_users2");
-  if(error){const r=await sb.rpc("admin_list_users");data=r.data}
+  let {data,error}=await sb.rpc("admin_list_users3");
+  if(error){const r=await sb.rpc("admin_list_users2");data=r.data;error=r.error}
+  if(error){const r=await sb.rpc("admin_list_users");data=r.data;error=r.error}
+  if(error||!data||!data.length){
+    try{const pp=await sb.from("profiles").select("id,name,username,mobile,banned,blacklisted,ban_reason"),ww=await sb.from("wallets").select("user_id,coins");
+    if(pp.data&&pp.data.length){const W={};(ww.data||[]).forEach(x=>W[x.user_id]=x.coins);data=pp.data.map(x=>({...x,coins:W[x.id]||0}))}}catch(e){}
+  }
+  USERR=error?error.message:"";
   UL=data||[];
   try{const {data:rr}=await sb.from("profiles").select("id,rank");const RM={};(rr||[]).forEach(x=>RM[x.id]=x.rank);UL=UL.map(x=>({...x,rank:RM[x.id]||null}));}catch(e){}
   try{const {data:jj}=await sb.from("match_joins").select("user_id,ff_id").order("created_at");JC={};FFM={};(jj||[]).forEach(r=>{JC[r.user_id]=(JC[r.user_id]||0)+1;if(r.ff_id)FFM[r.user_id]=r.ff_id})}catch(e){JC={}}
@@ -404,16 +410,16 @@ function usersCard(){
 function profList(){
   const q=aQ.trim().toLowerCase();
   const L=UL.filter(u=>!q||[u.username,u.name,u.mobile,FFM[u.id]].some(x=>String(x||"").toLowerCase().includes(q)));
-  if(!L.length)return '<div class="mu">Koi user nahi mila</div>';
-  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button></span></div>`).join("");
+  if(!L.length)return '<div class="mu">Koi user nahi mila'+(USERR?'<br>Error: '+esc(USERR)+'<br>admin_setup.sql run karo.':'')+'</div>';
+  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button><button class="btn ${u.blacklisted?'off':''}" style="padding:6px 10px" onclick="blUser('${u.id}',${!u.blacklisted})">${u.blacklisted?'UN-BLACKLIST':'BLACKLIST'}</button><button class="btn" style="padding:6px 10px" onclick="warnUser('${u.id}')">⚠️ WARNING</button></span></div>`).join("");
 }
 function profUsers(){
-  return `<h3>👥 Sab Users (${UL.length})</h3><div class="card"><input class="ci" placeholder="Naam, username ya game ID search karo" value="${esc(aQ)}" oninput="aQ=this.value;$('plist').innerHTML=profList()"><div id="plist">${profList()}</div></div>`;
+  return `<h3>👥 Sab Users (${UL.length})</h3><button class="btn w100" style="margin-bottom:8px" onclick="loadUsers().then(()=>R())">🔄 REFRESH</button><div class="card"><input class="ci" placeholder="Naam, username ya game ID search karo" value="${esc(aQ)}" oninput="aQ=this.value;$('plist').innerHTML=profList()"><div id="plist">${profList()}</div></div>`;
 }
 function userList(){
   const q=aQ.trim().toLowerCase();
   const L=UL.filter(u=>!q||[u.id,u.username,u.name,u.mobile].some(x=>String(x||"").toLowerCase().includes(q)));
-  if(!L.length)return '<div class="mu">Koi user nahi mila</div>';
+  if(!L.length)return '<div class="mu">Koi user nahi mila'+(USERR?'<br>Error: '+esc(USERR)+'<br>admin_setup.sql run karo.':'')+'</div>';
   return L.map(u=>{
     const fl=(u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':'');
     return `<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.username||"No username")}</b>${fl}<br><span class="mu">${esc(u.name||"Name unavailable")} · +91 ${esc(u.mobile||"Mobile unavailable")}</span><br><span class="mu">💼 Wallet: <b>🪙 ${(Number(u.coins)||0).toLocaleString('en-IN')}</b> · 🏆 Rank: <b>${u.rank||"—"}</b> · 🎮 <b>${JC[u.id]||0}</b> matches</span><br><span class="mu" style="font-size:10px;user-select:all;word-break:break-all">UID: ${esc(String(u.id))}</span></span>

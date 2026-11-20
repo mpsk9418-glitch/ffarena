@@ -302,7 +302,7 @@ function list(){
 function pro(){
   return `<div class="card"><b>👤 ${esc((gu()[ME]||{}).n||"")}</b><div class="mu">${ADM?"Admin account":"@"+esc((gu()[ME]||{}).u||"player")+" · +91 "+esc(PROF.mobile||"")}</div><div class="mu">${esc((gu()[ME]||{}).e||"")}</div><button class="b2" style="margin-top:8px" onclick="logout()">LOGOUT</button></div><div class="card"><b>Free Fire Character ID</b><p class="mu">Join karne se pehle apna sahi ID daalo.</p>
   <input id="cid" inputmode="numeric" value="${ID.replace(/[^0-9]/g,"")}" placeholder="Character ID" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:10px">
-  <button class="btn w100" onclick="ID=$('cid').value.trim();try{localStorage.setItem('ffaid',ID)}catch(e){}alert('Save ho gaya')">SAVE</button></div>`;
+  <button class="btn w100" onclick="ID=$('cid').value.trim();try{localStorage.setItem('ffaid',ID)}catch(e){}alert('Save ho gaya')">SAVE</button></div>`+(ADM?profUsers():"");
 }
 function mine(){
   const ids=Object.keys(J).filter(id=>M.some(x=>x.id==id));
@@ -357,14 +357,14 @@ function promoGen(){
   <button class="btn w100" onclick="genPromo()">CODE BANAO</button>
   ${L.length?`<h3 style="margin:12px 0 6px;font-size:15px">Banaye gaye codes</h3>`+L.map(x=>`<div class="li"><span><b>${esc(x.c)}</b> · 🪙${x.v} · ${x.u}/${x.m} use</span><button class="btn" style="padding:6px 10px" onclick="delPromo('${esc(x.c)}')">DELETE</button></div>`).join(""):""}</div>`;
 }
-let UL=[],UH=null,aDash=null,aQ="",aAct=[],JC={};
+let FFM={},UL=[],UH=null,aDash=null,aQ="",aAct=[],JC={};
 async function loadUsers(){
   if(!ADM){UL=[];return}
   let {data,error}=await sb.rpc("admin_list_users2");
   if(error){const r=await sb.rpc("admin_list_users");data=r.data}
   UL=data||[];
   try{const {data:rr}=await sb.from("profiles").select("id,rank");const RM={};(rr||[]).forEach(x=>RM[x.id]=x.rank);UL=UL.map(x=>({...x,rank:RM[x.id]||null}));}catch(e){}
-  try{const {data:jj}=await sb.from("match_joins").select("user_id");JC={};(jj||[]).forEach(r=>{JC[r.user_id]=(JC[r.user_id]||0)+1})}catch(e){JC={}}
+  try{const {data:jj}=await sb.from("match_joins").select("user_id,ff_id").order("created_at");JC={};FFM={};(jj||[]).forEach(r=>{JC[r.user_id]=(JC[r.user_id]||0)+1;if(r.ff_id)FFM[r.user_id]=r.ff_id})}catch(e){JC={}}
   try{const d=await sb.rpc("admin_dashboard");aDash=d.data||null}catch(e){aDash=null}
 }
 async function openHist(id){
@@ -400,6 +400,15 @@ function usersCard(){
   <div class="st" style="margin:10px 0"><div class="stat"><div class="mu">TOTAL USERS</div><b>${UL.length}</b></div><div class="stat"><div class="mu">TOTAL WALLET BALANCE</div><b>🪙 ${portfolioTotal.toLocaleString('en-IN')}</b></div></div>
   <div class="mu" style="margin:6px 0">Username, User ID, name ya mobile se search karo. Har user ka wallet aur rank yahin dekho.</div>
   <input class="ci" placeholder="Search user..." value="${esc(aQ)}" oninput="aQ=this.value;$('ulist').innerHTML=userList()"><div id="ulist">${userList()}</div></div>`;
+}
+function profList(){
+  const q=aQ.trim().toLowerCase();
+  const L=UL.filter(u=>!q||[u.username,u.name,u.mobile,FFM[u.id]].some(x=>String(x||"").toLowerCase().includes(q)));
+  if(!L.length)return '<div class="mu">Koi user nahi mila</div>';
+  return L.map(u=>`<div class="li" style="flex-wrap:wrap;gap:6px"><span><b>${esc(u.name||"Name nahi")}</b> · @${esc(u.username||"-")}${u.blacklisted?' <span class="bd x">BLACKLISTED</span>':u.banned?' <span class="bd x">BANNED</span>':''}<br><span class="mu">Game ID: <b>${esc(FFM[u.id]||"abhi tak nahi")}</b> · 🪙 <b>${Number(u.coins)||0}</b></span></span><span style="display:flex;gap:4px"><button class="btn" style="padding:6px 10px" onclick="openHist('${u.id}');go('adm')">HISTORY</button><button class="btn ${u.banned?'off':''}" style="padding:6px 10px" onclick="banUser('${u.id}',${!u.banned})">${u.banned?'UNBAN':'BAN'}</button></span></div>`).join("");
+}
+function profUsers(){
+  return `<h3>👥 Sab Users (${UL.length})</h3><div class="card"><input class="ci" placeholder="Naam, username ya game ID search karo" value="${esc(aQ)}" oninput="aQ=this.value;$('plist').innerHTML=profList()"><div id="plist">${profList()}</div></div>`;
 }
 function userList(){
   const q=aQ.trim().toLowerCase();
